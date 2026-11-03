@@ -1,0 +1,438 @@
+{
+  "schema": 1,
+  "verified_at": "2026-11-02",
+  "scope": "Upstream documented family settings. NeuralDeep forwarding/semantics must be validated separately; HTTP acceptance alone does not prove applied effort.",
+  "models": {
+    "claude-opus-5.5": {
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "default_effort": "medium",
+      "parameters": {},
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://platform.claude.com/docs/en/build-with-claude/effort"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "upstream_effort_parameter": "output_config.effort",
+      "thinking_options": [
+        "adaptive"
+      ],
+      "thinking_constraints": {
+        "always_enabled": true,
+        "restricted_modes_max_effort": null
+      },
+      "notes": "NeuralDeep exposes OpenAI protocol; the gateway sends reasoning_effort. Five-level semantics are upstream Anthropic documentation, not proof NeuralDeep forwards each level."
+    },
+    "claude-sonnet-5.5": {
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "default_effort": "high",
+      "parameters": {},
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://platform.claude.com/docs/en/build-with-claude/effort"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "upstream_effort_parameter": "output_config.effort",
+      "thinking_options": [
+        "adaptive",
+        "between_tools"
+      ],
+      "thinking_constraints": {
+        "always_enabled": false,
+        "restricted_modes_max_effort": "high"
+      },
+      "notes": "NeuralDeep exposes OpenAI protocol; the gateway sends reasoning_effort. Five-level semantics are upstream Anthropic documentation, not proof NeuralDeep forwards each level."
+    },
+    "claude-haiku-5.5": {
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "default_effort": "medium",
+      "parameters": {},
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://platform.claude.com/docs/en/build-with-claude/effort"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "upstream_effort_parameter": "output_config.effort",
+      "thinking_options": [
+        "adaptive",
+        "disabled"
+      ],
+      "thinking_constraints": {
+        "always_enabled": false,
+        "restricted_modes_max_effort": "high"
+      },
+      "notes": "NeuralDeep exposes OpenAI protocol; the gateway sends reasoning_effort. Five-level semantics are upstream Anthropic documentation, not proof NeuralDeep forwards each level."
+    },
+    "glm-5.3": {
+      "efforts": [
+        "low",
+        "high",
+        "max"
+      ],
+      "default_effort": "max",
+      "parameters": {
+        "thinking": {
+          "type": "enabled",
+          "clear_thinking": false
+        }
+      },
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://docs.z.ai/guides/capabilities/thinking",
+        "https://docs.z.ai/guides/capabilities/thinking-mode",
+        "https://docs.z.ai/guides/llm/glm-5.3"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "thinking_options": [
+        "enabled"
+      ],
+      "preserve_reasoning": true,
+      "notes": "Standard API accepts low/high/max; Coding Plan aliases differ and are not assumed for NeuralDeep."
+    },
+    "glm-5.3-flash": {
+      "efforts": [
+        "low",
+        "high",
+        "max"
+      ],
+      "default_effort": "max",
+      "parameters": {
+        "thinking": {
+          "type": "enabled",
+          "clear_thinking": false
+        }
+      },
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://docs.z.ai/guides/capabilities/thinking",
+        "https://docs.z.ai/guides/capabilities/thinking-mode",
+        "https://docs.z.ai/guides/vlm/glm-5.3-flash"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "thinking_options": [
+        "enabled"
+      ],
+      "preserve_reasoning": true,
+      "notes": "Standard API accepts low/high/max; Coding Plan aliases differ and are not assumed for NeuralDeep."
+    },
+    "glm-5.3-flashx": {
+      "efforts": [
+        "low",
+        "high",
+        "max"
+      ],
+      "default_effort": "max",
+      "parameters": {
+        "thinking": {
+          "type": "enabled",
+          "clear_thinking": false
+        }
+      },
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://docs.z.ai/guides/capabilities/thinking",
+        "https://docs.z.ai/guides/capabilities/thinking-mode",
+        "https://docs.z.ai/guides/vlm/glm-5.3-flash"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "thinking_options": [
+        "enabled"
+      ],
+      "preserve_reasoning": true,
+      "notes": "Standard API accepts low/high/max; Coding Plan aliases differ and are not assumed for NeuralDeep."
+    },
+    "glm-5.2": {
+      "efforts": [
+        "high",
+        "max"
+      ],
+      "default_effort": "max",
+      "parameters": {
+        "thinking": {
+          "type": "enabled",
+          "clear_thinking": false
+        }
+      },
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://docs.z.ai/guides/capabilities/thinking",
+        "https://docs.z.ai/guides/capabilities/thinking-mode"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "accepted_efforts": [
+        "none",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "selectable_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "effort_aliases": {
+        "low": "high",
+        "medium": "high",
+        "xhigh": "max"
+      },
+      "reasoning_off_efforts": [
+        "none",
+        "minimal"
+      ],
+      "thinking_options": [
+        "enabled",
+        "disabled"
+      ],
+      "preserve_reasoning": true
+    },
+    "kimi-k3": {
+      "efforts": [
+        "low",
+        "high",
+        "max"
+      ],
+      "default_effort": "max",
+      "parameters": {},
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://platform.kimi.ai/docs/guide/kimi-k3-quickstart",
+        "https://platform.kimi.ai/docs/guide/use-reasoning-effort"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "thinking_options": [
+        "always-on"
+      ],
+      "preserve_reasoning": true,
+      "notes": "Standard API max default; Kimi Coding Plan uses high default, which must not be substituted. Official migration removes K2.x thinking object for K3."
+    },
+    "kimi-k3.1-pro": {
+      "efforts": [
+        "low",
+        "high",
+        "max"
+      ],
+      "default_effort": "max",
+      "parameters": {},
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://platform.kimi.ai/docs/guide/kimi-k3-1-pro-quickstart",
+        "https://platform.kimi.ai/docs/guide/use-reasoning-effort"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "thinking_options": [
+        "always-on"
+      ],
+      "preserve_reasoning": true,
+      "notes": "Standard API max default; Kimi Coding Plan uses high default, which must not be substituted. Official migration removes K2.x thinking object for K3."
+    },
+    "kimi-k2.6": {
+      "efforts": [],
+      "default_effort": null,
+      "parameters": {
+        "thinking": {
+          "type": "enabled"
+        }
+      },
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://platform.kimi.ai/docs/guide/kimi-k2-6-quickstart"
+      ],
+      "thinking_options": [
+        "enabled",
+        "disabled"
+      ],
+      "preserve_reasoning": true,
+      "tool_choice_values_when_thinking": [
+        "auto",
+        "none"
+      ],
+      "fixed_parameters_when_thinking": {
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "n": 1,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0
+      },
+      "fixed_parameters_when_not_thinking": {
+        "temperature": 0.6,
+        "top_p": 0.95
+      },
+      "notes": "No tunable numeric effort documented. ON/OFF is a thinking mode, not three invented effort levels."
+    },
+    "kimi-k2.7-code": {
+      "efforts": [],
+      "default_effort": null,
+      "parameters": {
+        "thinking": {
+          "type": "enabled"
+        }
+      },
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://platform.kimi.ai/docs/guide/kimi-k2-7-code-quickstart",
+        "https://www.kimi.com/code/docs/en/kimi-code/models"
+      ],
+      "thinking_options": [
+        "enabled"
+      ],
+      "preserve_reasoning": true,
+      "tool_choice_values_when_thinking": [
+        "auto",
+        "none"
+      ],
+      "fixed_parameters": {
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "n": 1,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0
+      },
+      "notes": "Thinking cannot be disabled. No adjustable effort documented; Kimi Code explicitly says K2.7 Code Highspeed has no adjustable effort."
+    },
+    "qwen3.8-flash": {
+      "efforts": [
+        "low",
+        "medium",
+        "xhigh"
+      ],
+      "default_effort": "xhigh",
+      "parameters": {
+        "enable_thinking": true,
+        "preserve_thinking": true
+      },
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://docs.qwencloud.com/api-reference/chat/openai-chat",
+        "https://docs.qwencloud.com/developer-guides/getting-started/latest-model"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "effort_aliases": {
+        "minimal": "low",
+        "high": "xhigh",
+        "max": "xhigh"
+      },
+      "reasoning_off_efforts": [
+        "none"
+      ],
+      "thinking_options": [
+        "enabled",
+        "disabled"
+      ],
+      "parameter_options": {
+        "enable_thinking": {
+          "type": "boolean"
+        },
+        "preserve_thinking": {
+          "type": "boolean"
+        },
+        "thinking_budget": {
+          "type": "integer",
+          "mutually_exclusive_with": "reasoning_effort"
+        }
+      },
+      "preserve_reasoning": true
+    },
+    "qwen3.7-plus": {
+      "efforts": [],
+      "default_effort": null,
+      "parameters": {
+        "enable_thinking": true,
+        "preserve_thinking": true
+      },
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://docs.qwencloud.com/api-reference/chat/openai-chat",
+        "https://docs.qwencloud.com/developer-guides/text-generation/thinking"
+      ],
+      "thinking_options": [
+        "enabled",
+        "disabled"
+      ],
+      "parameter_options": {
+        "enable_thinking": {
+          "type": "boolean"
+        },
+        "preserve_thinking": {
+          "type": "boolean"
+        },
+        "thinking_budget": {
+          "type": "integer"
+        }
+      },
+      "preserve_reasoning": true,
+      "notes": "Upstream documents thinking ON/OFF and numeric thinking_budget; no discrete effort vocabulary for this model was established. Do not borrow Qwen3.8 levels."
+    },
+    "qwen3.7-flash": {
+      "efforts": [],
+      "default_effort": null,
+      "parameters": {
+        "enable_thinking": true,
+        "preserve_thinking": true
+      },
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://docs.qwencloud.com/api-reference/chat/openai-chat",
+        "https://docs.qwencloud.com/developer-guides/text-generation/thinking"
+      ],
+      "thinking_options": [
+        "enabled",
+        "disabled"
+      ],
+      "parameter_options": {
+        "enable_thinking": {
+          "type": "boolean"
+        },
+        "preserve_thinking": {
+          "type": "boolean"
+        },
+        "thinking_budget": {
+          "type": "integer"
+        }
+      },
+      "preserve_reasoning": true,
+      "notes": "Upstream documents thinking ON/OFF and numeric thinking_budget; no discrete effort vocabulary for this model was established. Do not borrow Qwen3.8 levels."
+    },
+    "minimax-m2.5": {
+      "efforts": [],
+      "default_effort": null,
+      "parameters": {},
+      "effort_status": "upstream-documented-neuraldeep-experimental",
+      "provenance": [
+        "https://platform.minimax.io/docs/api-reference/text-openai-api"
+      ],
+      "thinking_options": [
+        "always-on"
+      ],
+      "preserve_reasoning": true,
+      "reasoning_format": "Preserve the entire assistant content including <think> tags, and tool_calls; if reasoning_split is used, preserve reasoning_content too.",
+      "parameter_options": {
+        "reasoning_split": {
+          "type": "boolean"
+        }
+      },
+      "notes": "Official API says reasoning_effort is effective only for MiniMax-M3.1-Flash. M2.x cannot disable thinking; disabled is accepted but ignored. No fake effort levels."
+    }
+  }
+}

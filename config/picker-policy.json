@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "_help": "Picker visibility only. The four option models stay in diagnostics and can be explicitly rechecked; they reappear after a successful recorded probe. Retired IDs are not routed or silently redirected.",
+  "hide_until_probe_passes": [
+    "qwen3.6-unlim",
+    "qwen3.6-unlim-noreason",
+    "qwen3.6-unlim-xl",
+    "qwen3.6-unlim-xl-noreason"
+  ],
+  "excluded_upstream_ids": [
+    "qwen-flash-next-ru"
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "disabled_tools": {
+    "image_avatar": "Provider returned HTTP 422 for a valid portrait; disabled by user until a confirmed fix. Other image tools remain enabled."
+  }
+}

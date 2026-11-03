@@ -1,0 +1,1784 @@
+# neuraldeep.ru — LLM API reference (для coding-агентов)
+
+> Полная машиночитаемая справка. Curl-friendly: `curl https://neuraldeep.ru/llms-full.txt`.
+> Индекс с указателями: `https://neuraldeep.ru/llms.txt`. Человеческая версия: `https://neuraldeep.ru/docs`.
+> Документ один (~умещается в контекст). Секции разделены заголовками `## <name>` — грепай по ним.
+
+Base URL: `https://api.neuraldeep.ru/v1` (OpenAI-совместимый)
+Auth: `Authorization: Bearer $YOUR_KEY`
+
+## Карта эндпоинтов
+Совместимы с OpenAI (любой OpenAI SDK, меняешь только `base_url`):
+- `POST /v1/chat/completions` — чат, vision, tools, structured output → https://neuraldeep.ru/docs/chat.md
+- `POST /v1/embeddings` — эмбеддинги → https://neuraldeep.ru/docs/vector.md
+- `POST /v1/audio/transcriptions` — распознавание речи (Whisper) → https://neuraldeep.ru/docs/transcribe.md
+- `POST /v1/audio/speech` — синтез речи, голоса OpenAI подменяются на наши → https://neuraldeep.ru/docs/tts.md
+- `GET /v1/models` — модели ключа → https://neuraldeep.ru/docs/start.md
+- `POST https://drift.neuraldeep.ru/v1/chat/completions` — агент Drift с памятью и инструментами → https://neuraldeep.ru/docs/drift-api.md
+
+Свой формат (перед вызовом прочитай раздел):
+- `POST /v1/rerank` — реранк (формат Cohere/Jina) → https://neuraldeep.ru/docs/rerank.md
+- `POST /v1/images/generate · /edit · /upscale · /background/remove · /enhance · /avatar` — картинки, асинхронно: задача → GET /v1/images/tasks/{uid} → /result. Пути /v1/images/generations нет → https://neuraldeep.ru/docs/images.md
+- `POST /v1/music/generate` — музыка, асинхронно: задача → GET /v1/music/tasks/{id} → /result → https://neuraldeep.ru/docs/music.md
+- `POST /v1/search/web · /read · /crawl, GET /v1/search/tg` — веб-поиск, чтение страниц, обход сайта, поиск по Telegram → https://neuraldeep.ru/docs/search.md
+- `POST /v1/ocr/extract` — OCR документов, асинхронно: GET /v1/ocr/jobs/{id} → /result → https://neuraldeep.ru/docs/ocr.md
+- `POST /v1/pii/anonymize · /deanonymize` — маскирование персональных данных → https://neuraldeep.ru/docs/guardrails.md
+- `POST /v1/audio/diarize` — кто когда говорил → https://neuraldeep.ru/docs/diarize.md
+- `POST /v1/decisions` — классификация и выбор варианта без генерации → https://neuraldeep.ru/docs/decisions.md
+- `GET /v1/limits` — остатки лимитов ключа → https://neuraldeep.ru/docs/limits-api.md
+- `POST https://speechcore.neuraldeep.ru/api/upload` — транскрибация длинных аудио и видео → https://neuraldeep.ru/docs/speechcore.md
+
+Available models:
+- claude-sonnet-5.5 — chat · tools · reasoning · vision (image) · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- claude-opus-5.5 — chat · tools · reasoning · vision (image) · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- claude-haiku-5.5 — chat · tools · reasoning · vision (image) · 1M ctx · pay-as-you-go · промпты до ~90k · кошелёк · по токенам · вне РФ
+- gpt-oss-120b — chat · tools · reasoning · 131k ctx · Starter · Pro · вне РФ
+- gpt-oss-20b — chat · tools · reasoning · 131k ctx · Starter · Pro · вне РФ
+- qwen3.8-27b — chat · tools · reasoning · vision (image · video) · 256k ctx · Starter · Pro · в РФ
+- qwen3.8-27b-noreason — chat · vision (image · video) · без reasoning (быстрый ответ) · 256k ctx · Starter · Pro · в РФ
+- qwen3.8-flash-next-ru — chat · tools · reasoning · vision (image) · 256k ctx · Starter · Pro · в РФ
+- qwen3.6-35b-a3b — chat · tools · reasoning · vision (image · video) · 256k ctx · все тарифы · в РФ
+- qwen3.6-35b-a3b-noreason — chat · vision (image · video) · без reasoning (быстрый ответ) · 256k ctx · все тарифы · в РФ
+- qwen3.6-fp8 — chat · tools · reasoning · vision (image · video) · FP8 fast-lane · 256k ctx · все тарифы · в РФ
+- qwen3.6-fp8-noreason — chat · vision (image · video) · FP8 · без reasoning (макс. скорость) · 256k ctx · все тарифы · в РФ
+- gemma-4-31b — chat · multimodal (image · video) · reasoning · 262k ctx · Starter · Pro · вне РФ
+- gemma-4-31b-noreason — chat · multimodal · без reasoning (быстрый) · 262k ctx · Starter · Pro · вне РФ
+- kimi-k2.6 — chat · reasoning · long-horizon · 256k ctx · Starter · Pro · в РФ
+- glm-5.2 — chat · reasoning · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- glm-5.3 — chat · reasoning · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- glm-5.3-flash — chat · reasoning · зрение · 1.3M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- glm-5.3-flashx — chat · reasoning · зрение · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- qwen3.7-flash — chat · reasoning · зрение · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- qwen3.8-flash — chat · reasoning · зрение · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- deepseek-v4-pro — chat · reasoning · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- deepseek-v4-flash — chat · reasoning · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- deepseek-v4.1-flash — chat · vision · tools · reasoning · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- deepseek-v4-flash-vision-exp — chat · vision · reasoning · 1M ctx · экспериментальная · pay-as-you-go · кошелёк · по токенам · вне РФ
+- deepseek-v4-flash-b24 — chat · tools · reasoning · 1M ctx · pay-as-you-go · кошелёк · по токенам · в РФ · партнёр Битрикс24 Вайбкод · ночью и в выходные: будни 18-07 МСК, суббота и воскресенье круглосуточно
+- gemma-b24 — chat · vision · tools · pay-as-you-go · 262k ctx · кошелёк · по токенам · в РФ · партнёр Битрикс24 Вайбкод · ночью и в выходные: будни 18-07 МСК, суббота и воскресенье круглосуточно
+- minimax-m2.5 — chat · agentic coding · pay-as-you-go · 205k ctx · кошелёк · по токенам · вне РФ
+- qwen3.7-plus — chat · vision · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- kimi-k2.7-code — chat · agentic coding · 262k ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- kimi-k3 — chat · multimodal reasoning · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- kimi-k3.1-pro — chat · multimodal reasoning · 1M ctx · pay-as-you-go · кошелёк · по токенам · вне РФ
+- e5-large — embeddings · 1024-dim · 100+ langs · 512 ctx · все тарифы · в РФ
+- bge-m3 — embeddings · multilingual · 8k ctx · все тарифы · в РФ
+- frida — embeddings · RU-first · 1536-dim (ai-forever/FRIDA) · 512 ctx · все тарифы · в РФ
+- jina-embeddings-v4 — embeddings · multimodal · 2048-dim (jinaai/jina-embeddings-v4) · 32k ctx · все тарифы · в РФ
+- qwen3-embedding-4b — embeddings · 100+ langs · 2560-dim (Qwen/Qwen3-Embedding-4B) · 16k ctx · все тарифы · в РФ
+- giga-embeddings — embeddings · RU-first 2048-dim (ai-sage/Giga-Embeddings-instruct) · 4k ctx · все тарифы · в РФ
+- qwen3-embedding-8b — embeddings · 100+ langs · 4096-dim, MRL (Qwen/Qwen3-Embedding-8B) · 8k ctx · все тарифы · в РФ
+- qwen3-reranker-8b — rerank · Qwen/Qwen3-Reranker-8B · 8k ctx · все тарифы · в РФ
+- bge-reranker — rerank · BAAI/bge-reranker-v2-m3 · 8k ctx · все тарифы · в РФ
+- whisper-1 — speech-to-text · универсальный, 100+ языков · все тарифы · в РФ
+- whisper-podlodka-turbo — speech-to-text · RU fine-tune (turbo) · все тарифы · в РФ
+- gigaam-v3 — speech-to-text · RU-first модель, обучена под русский · все тарифы · в РФ
+- qwen3-tts — text-to-speech · синтез речи · 8 голосов · мультиязык · все тарифы · в РФ
+- espeech-tts — text-to-speech · РУССКИЙ с ударениями (резолв омографов) · все тарифы · в РФ
+- nemotron-3-diarization — диаризация · кто и когда говорил · до 8 спикеров · все тарифы · в РФ
+- Lyria-3-Pro — музыка · песни с вокалом и инструменталы по описанию и тексту · все тарифы · вне РФ
+- frida-decisions — решения по тексту · выбор варианта, шкала, да/нет, ранжирование · 512 ctx · все тарифы · в РФ
+- clef-flash — решения по тексту · выбор варианта, шкала, да/нет · длинный контекст · 8192 ctx · все тарифы · в РФ
+- Qwen-Image-2.1 — image · генерация и правка (свои GPU) · все тарифы · в РФ
+- image-edit — image · правка словами (свои GPU) · все тарифы · в РФ
+- upscale ×4 — image · апскейл RealESRGAN · все тарифы · в РФ
+- background-remove — image · удаление фона (ISNet/RMBG) · все тарифы · в РФ
+- enhance — image · улучшение (FLUX) · все тарифы · в РФ
+- avatar — image · аватар из фото · все тарифы · в РФ
+- qwen3.6-unlim — chat · tools · reasoning · безлимит запросов · 46k ctx · только с опцией Qwen ∞ · в РФ
+- qwen3.6-unlim-noreason — chat · tools · без reasoning (быстрый ответ) · безлимит запросов · 46k ctx · только с опцией Qwen ∞ · в РФ
+- qwen3.6-unlim-xl — chat · tools · reasoning · безлимит запросов · длинный контекст · 138k ctx · только с опцией Qwen ∞ · в РФ
+- qwen3.6-unlim-xl-noreason — chat · tools · без reasoning (быстрый ответ) · безлимит запросов · длинный контекст · 138k ctx · только с опцией Qwen ∞ · в РФ
+
+## Разделы (у каждого свой markdown-файл, ссылки ниже)
+Hub API:
+- Начало · ключ, ошибки, квоты — https://neuraldeep.ru/docs/start.md
+- Текст · чат — https://neuraldeep.ru/docs/chat.md
+- Векторизация — https://neuraldeep.ru/docs/vector.md
+- Реранжирование — https://neuraldeep.ru/docs/rerank.md
+- Транскрибация — https://neuraldeep.ru/docs/transcribe.md
+- Распознавание картинок — https://neuraldeep.ru/docs/vision.md
+- Structured output — https://neuraldeep.ru/docs/structured.md
+- Клиенты · агенты — https://neuraldeep.ru/docs/agents.md
+- Остатки лимитов · Limits API — https://neuraldeep.ru/docs/limits-api.md
+- Поиск · Search API — https://neuraldeep.ru/docs/search.md
+- OCR · документы — https://neuraldeep.ru/docs/ocr.md
+- Картинки · Image API — https://neuraldeep.ru/docs/images.md
+- Музыка · Music API — https://neuraldeep.ru/docs/music.md
+- Анонимизация ПДн · PII Guard — https://neuraldeep.ru/docs/guardrails.md
+- SpeechCore · STT — https://neuraldeep.ru/docs/speechcore.md
+- Озвучка · TTS API — https://neuraldeep.ru/docs/tts.md
+- Кто когда говорил · диаризация — https://neuraldeep.ru/docs/diarize.md
+- Решения по тексту · FRIDA-Decisions, clef-flash — https://neuraldeep.ru/docs/decisions.md
+- Книга · поиск и MCP — https://neuraldeep.ru/docs/book-api.md
+
+Drift API:
+- Drift · обзор — https://neuraldeep.ru/docs/drift-api.md
+- Файлы + sandbox preview — https://neuraldeep.ru/docs/drift-files.md
+- Свои tools, skills, MCP — https://neuraldeep.ru/docs/drift-caller-tools.md
+- Задачи · proactive — https://neuraldeep.ru/docs/drift-tasks.md
+- Память · memory — https://neuraldeep.ru/docs/drift-memory.md
+- Изоляция и безопасность — https://neuraldeep.ru/docs/drift-security.md
+
+Лимиты:
+- Настройки агента — https://neuraldeep.ru/docs/agent-config.md
+- Лимиты · ошибки — https://neuraldeep.ru/docs/limits.md
+
+Справка:
+- Стриминг — https://neuraldeep.ru/docs/streaming.md
+- SDK · Python / JS — https://neuraldeep.ru/docs/sdk.md
+- Приватность — https://neuraldeep.ru/docs/privacy.md
+
+## Цены и тарификация
+
+Прайс отдаётся машиночитаемо, без ключа и без регистрации:
+
+```bash
+curl -s https://neuraldeep.ru/api/public/wallet-prices
+```
+
+```json
+{"prices": [
+  {"model": "deepseek-v4-pro", "billing": "token",
+   "in_rub_1m": 71.4, "out_rub_1m": 142.8,
+   "unit_rub": null, "rub_per_min": null,
+   "premium": true, "or_model": false}
+]}
+```
+
+| поле | что значит |
+|---|---|
+| `model` | точный id модели — та же строка, что идёт в поле `model` запроса |
+| `billing` | `token` за токены · `unit` за операцию · `minute` за минуту аудио |
+| `in_rub_1m` | ₽ за 1 000 000 входных токенов |
+| `out_rub_1m` | ₽ за 1 000 000 выходных токенов |
+| `unit_rub` | ₽ за операцию (картинки, OCR, поиск) |
+| `rub_per_min` | ₽ за минуту аудио (транскрибация) |
+| `premium` | `true` = только с кошелька, в подписку не входит |
+
+Источник — та же таблица, по которой реально списываются деньги, второго
+прайса у нас нет. Ответ кешируется на 5 минут.
+
+**Две схемы оплаты, активна ровно одна.** Смешивать их при сравнении провайдеров нельзя:
+
+- **Подписка** (Free · Starter · Pro · Coder · Qwen ∞) — фиксированная сумма в месяц
+  и ограничение по числу запросов. Токены сверх этого не тарифицируются, поэтому
+  пересчитать подписку в ₽ за 1M токенов корректно нельзя. Витрина: https://neuraldeep.ru/pricing
+- **Кошелёк (pay-as-you-go)** — оплата по токенам из рублёвого баланса по ставкам
+  из `/api/public/wallet-prices`. Доступен весь каталог, месячной платы нет.
+  Включается тумблером в кабинете; пока он включён, подписка не действует.
+
+Лимиты тарифов машиночитаемо: `GET https://neuraldeep.ru/api/public/tier-limits`
+Остаток лимитов своего ключа: `GET /v1/limits` (см. раздел «Остатки лимитов»).
+
+Кешированные prompt-токены (prefix cache) тарифицируются по ставке кеша модели, поле
+`cached_in_rub_1m` в `/api/public/wallet-prices` (у DeepSeek она в 30-60 раз ниже входа, у
+большинства моделей в 5-10 раз); на длинных повторяющихся контекстах это основная статья экономии.
+
+## Начало работы
+
+Все API платформы живут на одном адресе и принимают один ключ. Чат, эмбеддинги, реранк и транскрибация совместимы с OpenAI: подойдёт любой OpenAI SDK, достаточно поменять `base_url`. Поиск, OCR, картинки, музыка, озвучка и диаризация работают тем же ключом, у каждого свой раздел ниже.
+
+| что | значение |
+|---|---|
+| базовый адрес | `https://api.neuraldeep.ru/v1` |
+| авторизация | заголовок `Authorization: Bearer sk-...` |
+| ключ | [кабинет, раздел «Ключи»](https://hub.neuraldeep.ru/app/keys) |
+| каталог моделей ключа | `GET /v1/models` |
+| витрина моделей и цены | [/models](https://hub.neuraldeep.ru/models) |
+
+```bash
+curl -s https://api.neuraldeep.ru/v1/models \
+  -H "Authorization: Bearer $YOUR_KEY" | jq '.data[].id'
+```
+
+**Какие модели доступны вашему ключу.** `GET /v1/models` отдаёт модели ключа со свойствами (картинки, инструменты, рассуждение), окном контекста и ценой. Важная оговорка: ключ бесплатного тарифа пока видит в списке и модели платных тарифов, а вызов такой модели вернёт `403` с заголовком `X-Window: free-model`.
+
+- На бесплатном тарифе работают `qwen3.6-35b-a3b`, `qwen3.6-fp8` и их `-noreason`-варианты, все эмбеддинги и реранкеры, транскрибация с небольшой дневной квотой.
+- `gemma-4-31b`, `gemma-4-31b-noreason`, `gpt-oss-120b`, `gpt-oss-20b`, `qwen3.8-27b` и `qwen3.8-27b-noreason` доступны на платных тарифах и с кошелька по токенам.
+- Ключ в режиме «Кошелёк» платит за каждый вызов по ценам витрины. Режим переключается у каждого ключа в кабинете. Пополнили кошелёк, а ключ остался в «Подписке» на free, значит, он по-прежнему живёт по правилам free.
+
+**Формат ошибок.** Гейт моделей (чат, эмбеддинги, реранк, транскрибация) отвечает как OpenAI: `{"error": {"message": "...", "code": "429"}}`. Сервисы поиска, OCR, картинок, озвучки и диаризации отвечают `{"detail": "..."}`. Исчерпанная квота у сервисов приходит отдельным телом, оно ниже. Тексты ошибок приходят на русском или английском: по языку кабинета владельца ключа, иначе по заголовку `Accept-Language` запроса, иначе на русском.
+
+| код | что значит | что делать |
+|---|---|---|
+| 400 | неверный запрос: битый JSON, нечитаемый файл, вход длиннее окна модели | исправить запрос, повтор не поможет |
+| 401 | ключ неверный или отозван, либо модели нет в ключе | проверить ключ и имя модели |
+| 402 | на кошельке нет денег для платной модели или операции (`X-Wallet: empty`), текст вида «Кошелёк пуст (0,00 ₽), пополните баланс: https://hub.neuraldeep.ru/app/billing» | пополнить кошелёк |
+| 403 | модель не входит в тариф (`X-Window: free-model`), аккаунт заблокирован | сменить модель, тариф или режим ключа |
+| 404 | нет такой модели, задачи или результата | проверить имя и id |
+| 413 | файл или текст больше предела ручки | порезать вход |
+| 415, 422 | формат не поддержан или параметр вне допустимых значений | исправить параметр |
+| 429 | лимит частоты, параллельности или квоты, дневная ёмкость ключа, бесплатная квота транскрибации, пауза за повторы | подождать `Retry-After` секунд |
+| 502, 503 | модель или сервис временно недоступны, модель перегружена у поставщика | повторить с паузой или выбрать другую модель |
+| 504 (у транскрибации бывает 408) | модель не ответила за отведённое время | повторить, уменьшить вход |
+
+Ошибки внешних поставщиков мы наружу не пробрасываем. Если поставщик отказал по своим причинам (авторизация, баланс, его лимиты), вы получите нейтральный `503`, а подробности уйдут нам в мониторинг. Как есть проходят только ошибки про сам ваш запрос: 400, 404, 413, 415, 422.
+
+**Как узнать свою квоту.** Объёмы тарифов в документации не публикуем: они меняются, а ключ всегда может спросить свой остаток сам. Опрос этих ручек квоту не тратит.
+
+| что | ручка |
+|---|---|
+| чат и эмбеддинги: окна, RPM, параллельность, кошелёк | `GET /v1/limits` ([подробно](#limits-api)) |
+| поиск и краулинг | `GET /v1/search/quota` |
+| OCR | `GET /v1/ocr/quota` |
+| картинки | `GET /v1/images/quota` |
+| музыка | `GET /v1/music/quota` |
+| диаризация | `GET /v1/audio/diarize/quota` |
+| озвучка | заголовки `X-Quota-Day-Remaining` и `X-Quota-Month-Remaining` в ответе `/v1/audio/speech` |
+
+Успешный ответ гейта несёт заголовки `x-ratelimit-api_key-remaining-requests` (сколько запросов осталось в текущей минуте) и `x-ratelimit-api_key-remaining-max_parallel_requests` (сколько свободных потоков).
+
+**429 от гейта моделей.** В ответе есть `Retry-After` (секунды), `Retry-After-Ms`, `X-Window` (какое окно сработало) и `X-RateLimit-Reset-Requests`. Текст ошибки заканчивается строкой `Limit resets at: ГГГГ-ММ-ДД ЧЧ:ММ:СС UTC`. Повторяйте после `Retry-After`, не раньше.
+
+| `X-Window` | что случилось |
+|---|---|
+| `session` | исчерпан лимит запросов тарифа на 3 часа (окна фиксированные по UTC), идёт пауза |
+| `week` | исчерпан недельный лимит, сброс в понедельник 00:00 UTC |
+| `chat_rpm`, `model_rpm`, `account-rpm` | слишком много запросов в минуту: на аккаунт или к одной модели |
+| `account-inflight`, `vector-inflight` | слишком много запросов в работе одновременно |
+| `key-rpm`, `key-tpm`, `key-parallel` | сработал лимит самого ключа: запросы или токены в минуту, одновременные запросы |
+| `daily-capacity` | исчерпана дневная ёмкость ключа, сброс в 00:00 UTC |
+| `stt-free-daily` | кончилась бесплатная квота транскрибации на сегодня, сброс в 00:00 UTC |
+| `abuse` | клиент много раз подряд повторял запрос после отказа, запросы аккаунта на паузе |
+
+Подробнее и с примерами тел в разделе [лимиты и коды ошибок](#limits).
+
+**429 от сервиса, когда кончилась квота.** Поиск, OCR, картинки, музыка, озвучка, PII-щит, диаризация и решения отвечают одинаково:
+
+```json
+{"error": {"type": "quota_exceeded", "pool": "search", "scope": "day",
+           "used": 100, "limit": 100, "tier": "starter",
+           "reset_at": "2026-10-23T00:00:00+00:00",
+           "upgrade_url": "https://neuraldeep.ru/pricing",
+           "message": "Лимит поиска исчерпан: 100/100 запросов за сутки, сброс в 00:00 UTC. Больше объёма: тариф выше (https://neuraldeep.ru/pricing) или оплата с кошелька (https://hub.neuraldeep.ru/app/billing)."}}
+```
+
+Числа в примере условные. Поле `message` написано для человека, программе лучше читать остальные поля. Если услуга в тариф не входит вовсе (`limit: 0`), текст начинается с «Ваш тариф не включает…». Заголовки: `X-Quota-Pool`, `X-Quota-Scope` (`day` или `month`), `X-Quota-Limit`, `X-Quota-Reset` и `Retry-After` до сброса. Дневные квоты сбрасываются в 00:00 UTC, месячные первого числа месяца в 00:00 UTC.
+
+У ключа в режиме «Кошелёк» без денег сервисы отвечают `402` с текстом «Кошелёк пуст (0,00 ₽), пополните баланс: https://hub.neuraldeep.ru/app/billing». Слишком много своих задач в очереди картинок дают `429` с текстом «У вас уже 5 задач в очереди из 5. Дождитесь, пока они завершатся.» и `Retry-After`.
+
+## Текст · Chat completion
+
+OpenAI-совместимый `/v1/chat/completions`. Поддерживает streaming, tools, reasoning (gpt-oss внутри reasoning-теги прокидывает). Ходы одного диалога держатся на одном воркере сами.
+
+```bash
+curl https://api.neuraldeep.ru/v1/chat/completions \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-oss-120b",
+    "messages": [
+      {"role":"system","content":"You are helpful."},
+      {"role":"user","content":"Привет"}
+    ],
+    "max_tokens": 500,
+    "temperature": 0.2
+  }'
+```
+
+```python
+from openai import OpenAI
+client = OpenAI(api_key="$YOUR_KEY", base_url="https://api.neuraldeep.ru/v1")
+r = client.chat.completions.create(
+    model="gpt-oss-120b",
+    messages=[{"role":"user","content":"Привет"}],
+    max_tokens=500,
+)
+print(r.choices[0].message.content)
+```
+
+> На наших qwen-лейнах ходы одного диалога (тот же ключ и то же начало переписки) сами попадают на один воркер, поэтому префикс берётся из кеша и multi-turn быстрее. Поле `user` на маршрут не влияет. Если у тебя несколько параллельных копий одного диалога и их нужно развести по воркерам, передай свой `prompt_cache_key`.
+
+**Reasoning по моделям.** По умолчанию reasoning включён, `reasoning_content` приходит отдельным полем.
+- `gpt-oss-120b`: глубину задаёт `reasoning_effort` — `low` / `medium` / `high`.
+- `qwen3.8-27b`: глубину задаёт `reasoning_effort` — `low` / `medium` / `xhigh` (по умолчанию `low`). Значения `high` и `minimal` модель не знает, такое значение снимается и остаётся `low`.
+- `qwen3.6-35b-a3b`: уровней усилия нет, `reasoning_effort` ни на что не влияет.
+- Выключить размышление на qwen можно только моделью с суффиксом `-noreason` (`qwen3.8-27b-noreason`, `qwen3.6-35b-a3b-noreason`). `enable_thinking: false` на базовом имени не действует: гейт его снимает, модель всё равно думает.
+- `thinking_token_budget` на qwen не работает ни в `chat_template_kwargs`, ни на верхнем уровне.
+
+## Векторизация · Embeddings
+
+OpenAI-совместимый `/v1/embeddings`. Принимает строку или массив строк. Размерность вектора зависит от модели: у `e5-large` и `bge-m3` 1024, у остальных больше, точное число видно по длине `embedding` в ответе.
+
+```bash
+curl https://api.neuraldeep.ru/v1/embeddings \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"e5-large","input":"привет мир"}'
+```
+
+```bash
+curl https://api.neuraldeep.ru/v1/embeddings \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"bge-m3","input":["текст 1","текст 2","text 3"]}'
+```
+
+```python
+from openai import OpenAI
+client = OpenAI(api_key="$YOUR_KEY", base_url="https://api.neuraldeep.ru/v1")
+texts = ["первый документ", "второй", "third"]
+r = client.embeddings.create(model="bge-m3", input=texts)
+vectors = [e.embedding for e in r.data]  # list[list[float]], у bge-m3 dim=1024
+```
+
+> Для RAG — `e5-large` на запросы/доки с префиксом "query: " / "passage: ". Для точности — `bge-m3` (длиннее контекст).
+
+**Префиксы обязательны у части моделей.** Сервер их не подставляет, их пишет клиент в начало каждого текста. Без префикса вектора считаются, но поиск по ним работает в разы хуже.
+
+| модель | запрос | документ |
+|---|---|---|
+| `frida` | `search_query: …` | `search_document: …` |
+| `e5-large` | `query: …` | `passage: …` |
+| `qwen3-embedding-4b`, `qwen3-embedding-8b` | `Instruct: <задача>\nQuery: …` | без префикса |
+
+У `frida` есть и другие режимы: `paraphrase: ` для сходства и поиска дублей, `categorize: ` для классификации, `categorize_sentiment: ` и `categorize_topic: ` для тональности и тем.
+
+```bash
+curl https://api.neuraldeep.ru/v1/embeddings \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"frida","input":["search_query: как вернуть деньги за заказ","search_document: Возврат оформляется в личном кабинете в течение 14 дней"]}'
+```
+
+**Ограничения на вход.**
+
+- Весь текст одного запроса, сумма по всем элементам `input`, до 105 600 символов (примерно 32 000 токенов). Больше: `400` с заголовком `X-Window: vector-payload`, разбейте на несколько запросов. Отдельного предела на число элементов в массиве нет.
+- Каждый текст держите в окне модели: `frida` 512 токенов, `giga-embeddings` 4096, `bge-m3` и `qwen3-embedding-8b` 8192, `jina-embeddings-v4` и `qwen3-embedding-4b` 32 768.
+- Параллельность у эмбеддингов и реранка своя, отдельная от чата. Сверх неё `429` с `X-Window: vector-inflight` и `Retry-After`. Квоты тоже свои, остаток в блоке `vector` ответа [`GET /v1/limits`](#limits-api).
+
+## Реранжирование · Rerank
+
+Пересортировка кандидатов по релевантности к query. Отдаёт `relevance_score` для каждого документа. Используется после векторного поиска для fine-grained ранжирования top-k.
+
+```bash
+curl https://api.neuraldeep.ru/v1/rerank \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "bge-reranker",
+    "query": "Что такое LLM?",
+    "documents": [
+      "Large language models обучены на больших корпусах.",
+      "Сегодня в Москве солнечно.",
+      "GPT-4 — это transformer-архитектура OpenAI."
+    ]
+  }'
+```
+
+```python
+import httpx
+# topk_docs: list[str] полученные векторным поиском (top 50)
+r = httpx.post(
+    "https://api.neuraldeep.ru/v1/rerank",
+    headers={"Authorization": f"Bearer $YOUR_KEY"},
+    json={"model": "bge-reranker", "query": query, "documents": topk_docs},
+    timeout=15.0,
+).json()
+# результаты отсортированы по relevance desc
+top3 = [topk_docs[x["index"]] for x in r["results"][:3]]
+```
+
+> Pipeline: сначала embeddings → ANN (Qdrant/FAISS) → top 50 → rerank → top 3-5 для LLM.
+
+**Ограничения на вход.** `query` плюс все `documents` вместе до 105 600 символов, иначе `400` с `X-Window: vector-payload`. Окно `qwen3-reranker-8b` 8192 токена на пару «запрос + документ». Ответ должен уложиться в 30 секунд, поэтому на реранк отправляйте top 20-100 кандидатов, а не всю выдачу. Параллельность и квота общие с эмбеддингами.
+
+## Транскрибация · Speech-to-Text
+
+Речь в текст, OpenAI-совместимый `POST /v1/audio/transcriptions`. Работает синхронно: отправили файл, в том же ответе получили текст. Для длинных записей с разметкой по спикерам есть асинхронный [SpeechCore](#speechcore).
+
+| модель | что это |
+|---|---|
+| `whisper-1` | Whisper large-v3-turbo, 100+ языков, понимает все форматы ответа |
+| `whisper-podlodka-turbo` | Whisper turbo, дообученный под русский |
+| `gigaam-v3` | GigaAM v3, модель под русский язык |
+
+**Запрос.** `multipart/form-data`, поля:
+
+- `file`, обязательно: аудио или видео файлом;
+- `model`, обязательно: одна из моделей выше;
+- `language`: код языка (`ru`, `en`...). Без него язык определяется сам, на коротких файлах лучше задать явно;
+- `prompt`: подсказка с терминами и именами, повышает точность на специальной лексике;
+- `response_format`: `json` (по умолчанию), `verbose_json`, `text`, `srt`, `vtt`;
+- `timestamp_granularities[]=word`: тайм-коды по словам, только вместе с `verbose_json`;
+- `temperature`: по умолчанию 0.
+
+```bash
+curl https://api.neuraldeep.ru/v1/audio/transcriptions \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -F file=@meeting.mp3 \
+  -F model=whisper-1 \
+  -F language=ru
+```
+
+```python
+from openai import OpenAI
+client = OpenAI(api_key="$YOUR_KEY", base_url="https://api.neuraldeep.ru/v1")
+with open("meeting.mp3", "rb") as f:
+    r = client.audio.transcriptions.create(model="whisper-1", file=f, language="ru")
+print(r.text)
+```
+
+**Ответ.** `json` и `verbose_json` возвращают `text`, `language`, `duration` в секундах и `segments` с тайм-кодами. Форматы `text`, `srt` и `vtt` гейт тоже заворачивает в JSON: содержимое лежит строкой в поле `text`. Субтитры `srt` и `vtt` собирает только `whisper-1`. Для других моделей берите `verbose_json` и стройте субтитры из `segments` сами.
+
+```json
+{"text": "Добрый день, начинаем созвон.", "language": "ru", "duration": 3.0,
+ "segments": [{"id": 0, "start": 0.0, "end": 2.9, "text": "Добрый день, начинаем созвон."}]}
+```
+
+**Ограничения на вход.**
+
+- Размер файла: до 25 МБ на запрос. Файл больше основной движок не принимает, такой запрос уходит в резерв и может отработать медленнее или не пройти. Длинную запись режьте на части до 25 МБ.
+- Длительность: отдельного предела нет, но ответ должен уложиться в 240 секунд. На практике это десятки минут речи за один запрос. Внутри запроса движок сам делит речь по паузам на короткие фрагменты и склеивает результат, резать на 30-секундные куски не нужно.
+- Форматы: всё, что читает ffmpeg. mp3, wav, m4a и mp4, ogg и opus, flac, webm, aac, amr, wma, mov и mkv (берётся звуковая дорожка).
+- Частота и каналы: любые, сервер сам приводит звук к 16 кГц моно. Чтобы влезть в 25 МБ, отправляйте 16 кГц моно в mp3 или opus: час речи в opus 32 кбит/с весит около 15 МБ.
+
+**Квота.** На бесплатном тарифе действует небольшая дневная квота транскрибаций, сутки считаются по UTC. Когда она кончилась, запрос пройдёт с оплатой по минутам аудио, если у аккаунта есть деньги на кошельке. Иначе придёт `429` с заголовками `X-Window: stt-free-daily`, `X-STT-Limit` и `Retry-After` до 00:00 UTC. На платных тарифах отдельной квоты на транскрибацию нет: каждый запрос считается в общие окна ключа вместе с чатом (запросы в минуту, параллельность, session и week), остатки видны в `GET /v1/limits`.
+
+**Ошибки.**
+
+- `400`: файл пустой или не похож на аудио (`X-Window: stt-bad-file`), ffmpeg не смог его прочитать (недокачан, битый), `timestamp_granularities` без `verbose_json`.
+- `429`: кончилась бесплатная дневная квота (см. выше) или сработал лимит частоты или параллельности ключа, ждите `Retry-After`.
+- `408` или `504`: распознавание не уложилось во время. Порежьте файл.
+- `503`: распознавание временно недоступно, повторите через минуту.
+
+## Распознавание картинок · Vision
+
+Multimodal через стандартный `/v1/chat/completions`. Передавай `image_url` в content-array (URL или base64). Модель описывает картинку, извлекает текст, отвечает на вопросы по изображению.
+
+```bash
+curl https://api.neuraldeep.ru/v1/chat/completions \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen3.6-35b-a3b",
+    "messages": [{
+      "role": "user",
+      "content": [
+        {"type":"text","text":"Что на картинке? Извлеки текст если есть."},
+        {"type":"image_url","image_url":{"url":"data:image/jpeg;base64,/9j/..."}}
+      ]
+    }],
+    "max_tokens": 500
+  }'
+```
+
+```python
+import base64
+from openai import OpenAI
+
+with open("photo.jpg","rb") as f:
+    b64 = base64.b64encode(f.read()).decode()
+
+client = OpenAI(api_key="$YOUR_KEY", base_url="https://api.neuraldeep.ru/v1")
+r = client.chat.completions.create(
+    model="qwen3.6-35b-a3b",
+    messages=[{
+        "role":"user",
+        "content":[
+            {"type":"text","text":"Опиши кратко что на фото"},
+            {"type":"image_url","image_url":{"url":f"data:image/jpeg;base64,{b64}"}},
+        ],
+    }],
+    max_tokens=400,
+)
+print(r.choices[0].message.content)
+```
+
+> Лимит — 1 картинка на запрос. Если нужно несколько — делай N последовательных запросов и склеивай ответы у себя в коде.
+
+## Structured output · JSON / guided grammar
+
+vLLM поддерживает guided JSON, regex и grammar (llguidance). Через OpenAI-совместимый `response_format`.
+
+```bash
+curl https://api.neuraldeep.ru/v1/chat/completions \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-oss-120b",
+    "messages": [{"role":"user","content":"Extract name and age from: Иван, 30 лет"}],
+    "response_format": {"type":"json_object"}
+  }'
+```
+
+```python
+from pydantic import BaseModel
+from openai import OpenAI
+
+class Person(BaseModel):
+    name: str
+    age: int
+
+client = OpenAI(api_key="$YOUR_KEY", base_url="https://api.neuraldeep.ru/v1")
+r = client.chat.completions.create(
+    model="gpt-oss-120b",
+    messages=[{"role":"user","content":"Иван, 30 лет"}],
+    response_format={"type":"json_schema","json_schema":{
+        "name":"Person","schema":Person.model_json_schema(),"strict":True
+    }},
+)
+person = Person.model_validate_json(r.choices[0].message.content)
+```
+
+> Для strict JSON — обязательно `strict: true` в schema. vLLM гарантирует соответствие грамматике.
+
+## Подключение клиентов · OpenCode и tools
+
+#### Первый запуск клиента
+
+Сначала проверьте ключ и API, затем настройте клиент. После успешного запроса переходите к [настройкам агента](#agent-config). Ниже в этом разделе примеры клиентов.
+
+##### Ключ, адрес и модель
+
+Откройте [кабинет](https://hub.neuraldeep.ru/app), раздел "Ключи", и создайте или скопируйте свой API-ключ. Базовый адрес для OpenAI-совместимого клиента - `https://api.neuraldeep.ru/v1`, с одним `/v1` на конце. Ключ не добавляйте в git и не публикуйте в логах или снимках экрана.
+
+Точный идентификатор модели берите из `data[].id` ответа `GET /v1/models` с вашим ключом. Для API это имя без префикса провайдера, например `qwen3.6-35b-a3b`. Эффективное окно контекста зависит от ключа, поэтому публичной таблицы моделей недостаточно. Модель в этом списке ещё не означает, что ключ может её вызвать, например модели с оплатой по токенам видны и ключу в режиме "Подписка". Доступ окончательно подтверждает короткий запрос ниже.
+
+##### Переменная окружения
+
+Вставьте блок для своей оболочки целиком и нажмите Enter, затем введите ключ в скрытом приглашении. Так ключ не попадает в историю команд. Фигурные скобки, а в PowerShell конструкция `& { }`, заставляют оболочку прочитать весь блок до запроса ключа, не убирайте их. Без них в терминале, где вставка идёт построчно, следующая строка блока уходит в переменную вместо ключа, а набранный ключ выполняется как команда и сохраняется в истории.
+
+```bash
+{
+  printf 'NeuralDeep API key: '
+  IFS= read -rs NEURALDEEP_API_KEY
+  printf '\n'
+  export NEURALDEEP_API_KEY
+  test -n "$NEURALDEEP_API_KEY" && printf 'NEURALDEEP_API_KEY is set\n'
+}
+```
+
+```powershell
+& {
+  $secret = Read-Host 'NeuralDeep API key' -AsSecureString
+  $env:NEURALDEEP_API_KEY = [System.Net.NetworkCredential]::new('', $secret).Password
+  -not [string]::IsNullOrWhiteSpace($env:NEURALDEEP_API_KEY)
+}
+```
+
+Проверка выводит `NEURALDEEP_API_KEY is set` в bash/zsh или `True` в PowerShell, но не сам ключ. Переменная действует в текущем терминале и запущенных из него процессах. Запускайте клиент из этого терминала. Для графического приложения задайте переменную в его окружении запуска и перезапустите приложение. Файл `.env` сам по себе переменную в процесс не передаёт.
+
+##### Проверка API до настройки клиента
+
+В bash/zsh выполните два запроса. Первый печатает статус ответа и найденные модели Qwen 3.6, ожидаются `HTTP/2 200` или `HTTP/1.1 200` и строки с `qwen3.6-35b-a3b` и `qwen3.6-35b-a3b-noreason`. При другом статусе повторите запрос без `| grep ...`, чтобы увидеть текст ошибки.
+
+```bash
+curl --silent --show-error --include https://api.neuraldeep.ru/v1/models \
+  -H "Authorization: Bearer $NEURALDEEP_API_KEY" \
+  | grep -o -E '^HTTP/[0-9.]+ [0-9]+|"id": "qwen3[.]6-35b-a3b[^"]*"'
+
+curl --silent --show-error --include https://api.neuraldeep.ru/v1/chat/completions \
+  -H "Authorization: Bearer $NEURALDEEP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"qwen3.6-35b-a3b-noreason","messages":[{"role":"user","content":"Reply with OK."}],"max_tokens":64}'
+```
+
+В PowerShell используйте отдельный блок, без bash-переносов строк и кавычек для curl.
+
+```powershell
+$headers = @{ Authorization = "Bearer $env:NEURALDEEP_API_KEY" }
+$models = Invoke-RestMethod -Uri 'https://api.neuraldeep.ru/v1/models' -Headers $headers
+$models.data | Select-Object id, limit
+
+$body = @{
+  model = 'qwen3.6-35b-a3b-noreason'
+  messages = @(@{ role = 'user'; content = 'Reply with OK.' })
+  max_tokens = 64
+} | ConvertTo-Json -Depth 4
+$reply = Invoke-RestMethod -Method Post -Uri 'https://api.neuraldeep.ru/v1/chat/completions' -Headers $headers -ContentType 'application/json' -Body $body
+$reply.choices[0].message.content
+```
+
+Успешный чат-запрос возвращает HTTP 200 и короткий ответ в `choices[0].message.content`, обычно `OK`. Он расходует квоту или баланс ключа, как обычный запрос. Если проверка не прошла, сначала разберите HTTP-ошибку, а не меняйте конфиг клиента.
+
+##### После первого ответа
+
+Конструктор [настроек агента](#agent-config) использует живые лимиты из `GET /api/public/tier-limits`. Сначала выберите клиент и найдите его файл конфигурации. OpenCode получает полный конфиг с основной и вспомогательной моделями и ключом из окружения, другие профили могут быть фрагментами для существующего файла. Сделайте резервную копию и перенесите только нужные ключи, сохранив остальных провайдеров. Не все показанные числа выражены в конфиге каждого клиента, поддержка пауз, потоков и ретраев зависит от клиента и его версии.
+
+#### Tool calling
+
+Стандартный OpenAI tool-calling через `tools` + `tool_choice`. Модель решает когда звать инструмент, возвращает JSON с аргументами.
+
+```python
+from openai import OpenAI
+client = OpenAI(api_key="$YOUR_KEY", base_url="https://api.neuraldeep.ru/v1")
+
+tools = [{
+  "type": "function",
+  "function": {
+    "name": "get_weather",
+    "description": "Получает погоду в городе",
+    "parameters": {
+      "type": "object",
+      "properties": {"city": {"type": "string"}},
+      "required": ["city"],
+    }
+  }
+}]
+
+messages = [{"role":"user","content":"Какая погода в Москве?"}]
+r = client.chat.completions.create(
+    model="gpt-oss-120b",
+    messages=messages,
+    tools=tools,
+    tool_choice="auto",
+)
+# r.choices[0].message.tool_calls → список вызовов
+```
+
+```bash
+curl https://api.neuraldeep.ru/v1/chat/completions \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model":"gpt-oss-120b",
+    "messages":[{"role":"user","content":"tell a short story"}],
+    "stream": true,
+    "max_tokens": 800
+  }'
+```
+
+> Для многократных агентных итераций используй `user: session_id` чтобы сессия жила на одном upstream — prefix caching экономит токены до 10×.
+
+#### Coding-агенты · coddy
+
+[coddy](https://coddy.dev) - открытый агент в одном статичном Go-бинарнике: консоль, ACP-сервер для VS Code и Zed, HTTP-шлюз со встроенным веб-интерфейсом и Telegram. NeuralDeep у него не "ещё один OpenAI-совместимый провайдер", а собственный тип: ключ выдаёт вход в хаб, а остаток лимитов агент читает нашей ручкой `GET /v1/limits` и держит в футере (окна сессии и недели, время сброса, кошелёк).
+
+```bash
+curl -fsSL https://coddy.dev/install.sh | bash
+
+# браузерный вход в хаб; на машине без браузера - тот же вход с --device
+coddy providers login neuraldeep
+```
+
+Вход сам допишет провайдера и модели тарифа в `~/.coddy/config.yaml`. Ключ можно вписать и руками - он всегда сильнее сохранённого входа:
+
+```yaml
+providers:
+  - name: "neuraldeep"
+    type: "neuraldeep"
+    api_key: "$YOUR_KEY"
+    api_base: "https://api.neuraldeep.ru/v1"   # api.neuraldeep.tech/v1 - международное зеркало
+
+models:
+  - model: "neuraldeep/qwen3.6-35b-a3b"
+    max_tokens: 8192
+
+agent:
+  model: "neuraldeep/qwen3.6-35b-a3b"
+```
+
+Используйте адрес API из своего кабинета. Навыки из нашего каталога coddy читает нативно: `~/.agents/skills` стоит у него в дефолтных `skills.dirs`, туда же кладёт паки `npx skillsbd install -g`. Числа таймаутов и потоков под твой тариф выдаёт конструктор в разделе "Настройки агента".
+
+#### OpenCode
+
+Конфиг [OpenCode](https://opencode.ai) лежит в `~/.config/opencode/opencode.json`, файл `opencode.json` в корне проекта его перекрывает. Готовый файл под ваш тариф и опции собирает [конструктор настроек агента](#agent-config), выберите в нём opencode и скопируйте результат. Ключ OpenCode берёт из переменной `NEURALDEEP_API_KEY`. Если конфиг уже есть, перенесите в него блок `provider.neuraldeep` и поля `model` и `small_model`.
+
+#### Coding-агенты · OpenAI Codex CLI
+
+[codex CLI](https://www.npmjs.com/package/@openai/codex) — терминальный coding-агент от OpenAI. Работает через `/v1/responses` (Responses API). На нашей стороне применены 3 файловых патча vLLM для поддержки `custom` tool types и multi-turn валидации (по issue [#33089](https://github.com/vllm-project/vllm/issues/33089)).
+
+```toml
+# ----------------- провайдер -----------------
+[model_providers.neuraldeep]
+name = "NeuralDeep Hub"
+base_url = "https://api.neuraldeep.ru/v1"
+wire_api = "responses"
+experimental_bearer_token = "$YOUR_KEY"
+# Альтернатива: env_key = "NEURALDEEP_API_KEY" + export в shell
+
+# ----------------- профили -----------------
+[profiles.neuraldeep]
+model_provider = "neuraldeep"
+model = "qwen3.6-35b-a3b"
+# qwen3.6 → 256k ctx, нативные tool-calls, лучше для большой codebase
+
+[profiles.neuraldeep-oss]
+model_provider = "neuraldeep"
+model = "gpt-oss-120b"
+# gpt-oss-120b → 131k ctx, длинный reasoning
+```
+
+```bash
+# TUI-режим с qwen3.6
+codex --profile neuraldeep
+
+# или с gpt-oss-120b
+codex --profile neuraldeep-oss
+
+# regулировка reasoning effort
+codex --profile neuraldeep -c model_reasoning_effort=low
+```
+
+> **wire_api = "chat" больше не поддерживается** в новых codex (с конца 2025). Только `"responses"`. Если видишь ошибку `Error loading config.toml: wire_api = "chat" is no longer supported` — поменяй на responses.
+
+## Остатки лимитов · GET /v1/limits
+
+Сколько осталось от квоты именно у твоего ключа — session/week (чат и векторный класс отдельно), живое окно чат-RPM текущей минуты, cooldown'ы, параллельность, ночной множитель, кошелёк в рублях и процент kimi-бюджета. Тем же `Bearer sk-`, что и инференс. Сделано для агентов и кронов: планировать расход, а не узнавать о лимите из `429`.
+
+```bash
+curl -s https://api.neuraldeep.ru/v1/limits \
+  -H "Authorization: Bearer $YOUR_KEY" | jq
+```
+
+```bash
+# сервер уже свёл все блокеры (cooldown'ы, окна, RPM, статус ключа) в decision
+curl -s https://api.neuraldeep.ru/v1/limits -H "Authorization: Bearer $YOUR_KEY" \
+  | jq -e '.decision.can_request'
+
+# тонкая настройка: тратить только если осталось >20% сессии
+curl -s https://api.neuraldeep.ru/v1/limits -H "Authorization: Bearer $YOUR_KEY" \
+  | jq -e '.chat.cooldown_sec == 0 and .chat.session.remaining > (.chat.session.limit / 5)'
+```
+
+Семантика: `decision` — сводка про chat-инференс (векторный лейн смотри в блоке `vector`); все числа уже эффективные (ночной ×2 применён — ничего не умножай); `remaining` посчитан на сервере и не бывает отрицательным; `key.status` ≠ `ok` означает 401 на инференсе независимо от остатков; при недоступных счётчиках — честный `503` c `Retry-After`. `decision.notices` — предупреждения, которые звать модели не мешают: `wallet_empty` значит, что ключ в режиме «Кошелёк», денег нет и он временно работает по правилам тарифа (бесплатные модели доступны, `can_request` из-за этого не гаснет). Ручка только читает — опрос квоту не тратит; чаще раза в 15-30 секунд поллить нет смысла.
+
+> Потолки ТАРИФОВ (не персональные остатки) — `GET /api/public/tier-limits`: потоки, RPM и таймаут гейта. Объёмные квоты там не отдаются никому — свою смотри в `GET /api/me`, блок `limits`.
+
+## Поиск · Search API
+
+Тем же ключом — поиск по Telegram и нашей базе ТГ-каналов, поиск по интернету, чтение страницы по ссылке и краулинг сайтов. Эндпоинты под `/v1/search/*`. Доступно на **всех тарифах, включая free** (кроме API-only тарифа Coder), с отдельным от чата лимитом.
+
+Две корзины лимитов: **поиск** (ТГ + база каналов + интернет + чтение страниц) и **краулинг** (отдельно — он тяжелее). Текущий остаток: `GET /v1/search/quota` или карточка «Search API» в дашборде. Каждый ответ поиска тоже несёт поле `quota` с остатком дня и месяца. При исчерпании придёт `429` с телом `quota_exceeded` и `Retry-After`.
+
+**Запрос и ошибки.** `POST /v1/search/web` требует поле `query`, `POST /v1/search/read` и `POST /v1/search/crawl` требуют `url`, тело должно быть JSON-объектом. Без обязательного поля придёт `400`. Ответ должен уложиться в 60 секунд. Если поиск или чтение страницы временно недоступны, придёт `503`, при сбое на нашей стороне `502`. У ключа в режиме «Кошелёк» с пустым балансом `402`.
+
+```bash
+# наша база Telegram-каналов (vector + full-text)
+curl "https://api.neuraldeep.ru/v1/search/tg?q=AI-агенты&limit=5" \
+  -H "Authorization: Bearer $YOUR_KEY"
+
+# поиск по интернету
+curl https://api.neuraldeep.ru/v1/search/web \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"query":"свежие новости про LLM","limit":3}'
+```
+
+```bash
+# чистый markdown одной страницы ("return_format":"text" для плоского текста)
+curl https://api.neuraldeep.ru/v1/search/read \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com"}'
+```
+
+```bash
+# обойти сайт (несколько страниц)
+curl https://api.neuraldeep.ru/v1/search/crawl \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com","limit":3}'
+
+# сколько осталось по обеим корзинам
+curl https://api.neuraldeep.ru/v1/search/quota \
+  -H "Authorization: Bearer $YOUR_KEY"
+```
+
+```python
+import httpx
+
+r = httpx.get(
+    "https://api.neuraldeep.ru/v1/search/tg",
+    params={"q": "RAG в проде", "limit": 5},
+    headers={"Authorization": "Bearer $YOUR_KEY"},
+)
+data = r.json()
+for item in data.get("results", []):
+    print(item.get("channel"), "—", item.get("text", "")[:120])
+print("остаток:", data.get("quota", {}).get("day"))
+```
+
+> web-поиск и краулинг тратят реальные деньги провайдеров, поэтому у них отдельная (более скромная) корзина. ТГ-поиск по нашей базе — дешёвый, лимит щедрее.
+
+## OCR · распознавание документов
+
+Тем же ключом — OCR для PDF и картинок (PNG/JPG/WEBP/BMP/TIFF). Эндпоинты под `/v1/ocr/*`. Доступно на **всех тарифах**, с отдельной от чата корзиной — лимит считается в **страницах**.
+
+Работает **асинхронно**: загружаешь документ → получаешь `job` → опрашиваешь статус (не чаще раза в секунду) → забираешь результат в `markdown`/`json`/`text`. Для разметки по координатам есть PNG-preview страницы (та же система координат, что и bbox). Профиль один, `fast`: прежний `pro` снят, запрос с ним молча идёт как `fast`. Остаток страниц: `GET /v1/ocr/quota` или `GET /v1/ocr/balance`. Когда страницы кончились, придёт `429` с телом `quota_exceeded` и `Retry-After`.
+
+**Ограничения на вход.**
+
+- Файл до 50 МБ, иначе `413`. Пустой файл `400`.
+- До 500 страниц в одном запросе, иначе `413`. Заранее это проверяется, только если передан `page_ranges`, без него страницы считаются после разбора документа.
+- `page_ranges` строкой: `1-5,8,10-12`.
+- Формат проверяет сам движок: неподдержанный файл вернёт `415` или `422`.
+- Заголовок `Idempotency-Key` защищает от двойного списания при повторе. Тот же ключ вернёт сохранённый ответ с `idempotent_replay: true`, тот же ключ с другими параметрами даст `422`, а пока первый запрос в работе, `409`.
+- Чужая или несуществующая задача: `404`. Пустой кошелёк у ключа в режиме «Кошелёк»: `402`.
+
+```bash
+# 1. загрузить (вернёт {"id":"job_...","page_count":N})
+curl https://api.neuraldeep.ru/v1/ocr/extract \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -F "file=@invoice.pdf"
+# (диапазон страниц: -F 'page_ranges=1-5,8')
+
+# 2. статус задачи
+curl https://api.neuraldeep.ru/v1/ocr/jobs/job_123 \
+  -H "Authorization: Bearer $YOUR_KEY"
+
+# 3. результат в markdown
+curl "https://api.neuraldeep.ru/v1/ocr/jobs/job_123/result?format=markdown" \
+  -H "Authorization: Bearer $YOUR_KEY"
+```
+
+```python
+import time, httpx
+
+H = {"Authorization": "Bearer $YOUR_KEY"}
+# 1. загрузка
+with open("invoice.pdf", "rb") as f:
+    job = httpx.post(
+        "https://api.neuraldeep.ru/v1/ocr/extract",
+        headers=H, files={"file": f},
+    ).json()
+jid = job["id"]
+print("страниц:", job["page_count"], "списано:", job["scan_pages_charged"])
+
+# 2. поллинг (раз в секунду)
+while True:
+    st = httpx.get(f"https://api.neuraldeep.ru/v1/ocr/jobs/{jid}", headers=H).json()
+    if st["status"] == "completed":
+        break
+    time.sleep(1)
+
+# 3. результат
+res = httpx.get(
+    f"https://api.neuraldeep.ru/v1/ocr/jobs/{jid}/result",
+    params={"format": "markdown"}, headers=H,
+).json()
+print(res["content"])
+```
+
+> Статус, результат и preview не списывают лимит, платите только за страницы при загрузке.
+
+## Картинки · Image API
+
+Генерация и обработка картинок тем же ключом, ручки под `/v1/images/*`. Генерирует и правит модель Qwen-Image на наших GPU в РФ, она понимает русский промпт без перевода. Апскейл, удаление фона, улучшение и аватар идут отдельными операциями.
+
+Своя квота у каждой группы: генерация и правка считаются отдельно от обработки готовых картинок. Остаток видно в `GET /v1/images/quota`. Квота списывается, только когда картинка готова. Задача, которая упала, квоту возвращает.
+
+**Как устроено.** Всё асинхронно, формат свой, не OpenAI. `POST` создаёт задачу и сразу отвечает `{"task_uid": "...", "queue_position": N, "eta_sec": N}`. Дальше опрашиваете `GET /v1/images/tasks/{uid}`, пока `status` не станет `finished` (другие значения: `queued`, `processing`, `failed`). Картинку забираете файлом через `GET /v1/images/tasks/{uid}/result`, пока она не готова, эта ручка отвечает `202` с пустым телом. Ссылок на хранилище наружу не отдаём.
+
+| ручка | вход | квота |
+|---|---|---|
+| `POST /v1/images/generate` | JSON `{prompt, options}` | генерация |
+| `POST /v1/images/edit` | multipart `images[]`, `prompt` | генерация |
+| `POST /v1/images/upscale` | multipart `image` | обработка |
+| `POST /v1/images/background/remove` | multipart `image` | обработка |
+| `POST /v1/images/enhance` | multipart `image` | обработка |
+| `POST /v1/images/avatar` | multipart `photo`, `gender`, `style` | обработка |
+| `GET /v1/images/queue` | | очередь сейчас |
+
+**Параметры генерации**, поле `options`: `width` и `height` (оба вместе), либо `aspect_ratio` (`1:1`, `4:3`, `3:4`, `16:9`, `9:16`, `square`), `negative_prompt`, `steps`, `true_cfg_scale`, `seed`, `num_images`, `transparent` (прозрачный фон). Без размера рисуется квадрат 1312×1312. У правки те же поля, кроме размера: пропорции берутся с первой картинки.
+
+**Ограничения на вход.**
+
+- Размер результата: не больше 1,5 Мпикс. Запрос крупнее не отклоняется, а уменьшается с сохранением пропорций, стороны округляются вниз до кратных 32. Каждая сторона до 2752 px, иначе `422`.
+- `num_images` от 1 до 4, `steps` от 1 до 50, `true_cfg_scale` от 1 до 10, `prompt` до 4000 символов, `negative_prompt` до 2000.
+- Правка: до 10 картинок в запросе и до 25 МБ на все файлы вместе.
+- Обработка: один файл до 25 МБ и до 4 Мпикс. Форматы PNG, JPEG, WebP.
+- Очередь: у одного аккаунта ограничено число задач, которые ждут или рисуются одновременно. Сверх этого придёт `429`, дождитесь своих задач.
+
+```bash
+uid=$(curl -s https://api.neuraldeep.ru/v1/images/generate \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"prompt":"кот-космонавт, неон","options":{"width":1024,"height":1024}}' | jq -r .task_uid)
+
+curl https://api.neuraldeep.ru/v1/images/tasks/$uid \
+  -H "Authorization: Bearer $YOUR_KEY"
+
+curl https://api.neuraldeep.ru/v1/images/tasks/$uid/result \
+  -H "Authorization: Bearer $YOUR_KEY" -o out.png
+```
+
+```bash
+# правка словами, до 10 исходных картинок
+curl https://api.neuraldeep.ru/v1/images/edit \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -F "images[]=@photo.jpg" -F "prompt=замени фон на морской берег"
+
+# апскейл готовой картинки
+curl https://api.neuraldeep.ru/v1/images/upscale \
+  -H "Authorization: Bearer $YOUR_KEY" -F "image=@photo.jpg"
+```
+
+```python
+import time, httpx
+
+H = {"Authorization": "Bearer $YOUR_KEY"}
+job = httpx.post(
+    "https://api.neuraldeep.ru/v1/images/generate",
+    headers=H, json={"prompt": "космический кот в неоне", "options": {"aspect_ratio": "1:1"}},
+).json()
+uid = job["task_uid"]
+
+# в очереди бывает несколько задач, держите таймаут на поллинге
+for _ in range(300):
+    st = httpx.get(f"https://api.neuraldeep.ru/v1/images/tasks/{uid}", headers=H).json()
+    if st["status"] in ("finished", "failed"):
+        break
+    time.sleep(2)
+
+img = httpx.get(f"https://api.neuraldeep.ru/v1/images/tasks/{uid}/result", headers=H).content
+open("out.png", "wb").write(img)
+```
+
+**Ошибки.**
+
+- `400`: пустой промпт.
+- `402`: на кошельке не хватает денег для операции.
+- `404`: результат устарел или нет картинки с таким номером.
+- `413`: файл больше предела.
+- `422`: параметр вне границ, неизвестный `aspect_ratio`, больше 10 картинок в правке, файл не картинка.
+- `429`: кончилась квота (тело `quota_exceeded`, см. [начало](#start)) или слишком много ваших задач в очереди.
+- `503`: генерация или обработка временно недоступны, повторите позже.
+
+## Музыка · Music API
+
+Генерация музыки тем же ключом, ручки под `/v1/music/*`. Модель Google Lyria 3 Pro: песня с вокалом по описанию стиля и тексту или инструментал, 48 кГц, mp3. Трек обычно готов секунд за 20–30.
+
+Единица счёта — трек. Остаток видно в `GET /v1/music/quota`. На кошельке трек стоит 10 ₽. Списываются только готовые треки: упавшая задача квоту и деньги возвращает.
+
+**Как устроено.** Всё асинхронно, формат свой, не OpenAI. `POST /v1/music/generate` создаёт задачу и сразу отвечает `{"task_id": "...", "status": "queued", "poll": "/v1/music/tasks/..."}`. Дальше опрашиваете `GET /v1/music/tasks/{id}`, пока `status` не станет `succeeded` или `failed` (по дороге `queued` и `running`). У готовой задачи есть `tracks[]` со ссылкой `url`. Файл забираете через `GET /v1/music/tasks/{id}/result?index=0`, пока трек не готов, эта ручка отвечает `409`.
+
+| ручка | что |
+|---|---|
+| `POST /v1/music/generate` | генерация, JSON |
+| `GET /v1/music/tasks/{id}` | статус и трек |
+| `GET /v1/music/tasks/{id}/result?index=0` | трек файлом, по умолчанию mp3, другой формат задаёт `audio_format`: `wav`, `wav32`, `flac`, `opus`, `aac` |
+| `GET /v1/music/quota` | остаток треков |
+| `GET /v1/music/models` | доступные модели |
+
+**Что писать в запрос.**
+
+- `prompt`: стиль словами — жанр, инструменты, настроение, тип вокала. Например «мрачный синтвейв, аналоговые синты, женский вокал».
+- `lyrics`: текст песни, можно с разметкой `[verse]`, `[chorus]`, `[bridge]`. Для трека без голоса напишите `[instrumental]`.
+- `vocal_language`: язык вокала, например `ru` или `en`.
+- `audio_duration`: желаемая длина в секундах, от 10 до 300. Это подсказка модели, точную длину она не гарантирует.
+- `bpm`, `key_scale`, `time_signature`: темп, тональность, размер. Тоже подсказки.
+- `seed`: повторить результат.
+
+Поля вне списка отбрасываются молча. За раз одна песня, `batch_size` больше 1 даёт `422`. Каверы, правка куска и отдельные дорожки сейчас недоступны.
+
+```bash
+id=$(curl -s https://api.neuraldeep.ru/v1/music/generate \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"prompt":"инди-поп, акустическая гитара, тёплый женский вокал","lyrics":"[verse]\nПо лужам до утра\n[chorus]\nМы снова дома","vocal_language":"ru","audio_duration":90}' | jq -r .task_id)
+
+curl https://api.neuraldeep.ru/v1/music/tasks/$id \
+  -H "Authorization: Bearer $YOUR_KEY"
+
+curl "https://api.neuraldeep.ru/v1/music/tasks/$id/result?index=0" \
+  -H "Authorization: Bearer $YOUR_KEY" -o track.mp3
+```
+
+```python
+import time, httpx
+
+H = {"Authorization": "Bearer $YOUR_KEY"}
+job = httpx.post(
+    "https://api.neuraldeep.ru/v1/music/generate", headers=H,
+    json={"prompt": "весёлый поп-панк про кота, который ненавидит понедельники", "vocal_language": "ru"},
+).json()
+tid = job["task_id"]
+
+for _ in range(120):
+    st = httpx.get(f"https://api.neuraldeep.ru/v1/music/tasks/{tid}", headers=H).json()
+    if st["status"] in ("succeeded", "failed"):
+        break
+    time.sleep(3)
+
+audio = httpx.get(f"https://api.neuraldeep.ru/v1/music/tasks/{tid}/result?index=0", headers=H).content
+open("track.mp3", "wb").write(audio)
+```
+
+**Ошибки.**
+
+- `400`: пустой запрос: нет ни описания, ни текста.
+- `402`: на кошельке не хватает денег на трек.
+- `404`: задачи с таким номером нет у вашего ключа или генерация не удалась.
+- `409`: трек ещё не готов.
+- `422`: недоступный `task_type`, `batch_size` больше 1, файлы в запросе, параметр не того типа.
+- `429`: кончилась квота (тело `quota_exceeded`, см. [начало](#start)).
+- `503`: генерация временно недоступна, повторите позже.
+
+## Анонимизация ПДн · PII Guard API
+
+Тем же ключом можно обезличивать персональные данные (ПДн) под `/v1/pii/*`. Сервис находит ПДн в русском тексте, заменяет их тегами вида `<PII type="PERSON" gender="male" id="1" />`, а на обратном пути подставляет оригиналы обратно и **ставит имена и места в нужный падеж**. Считается на нашей GPU в России.
+
+Два способа подключить:
+- **свой пайплайн**: зовёшь `/anonymize` и `/deanonymize` сам, как в примерах ниже;
+- **щит на ключе**: включается в кабинете, в разделе «Ключи», переключателем PII-Guard. После этого каждый чат-запрос с этим ключом обезличивается до модели, а ответ восстанавливается до клиента. Cursor, opencode, Open WebUI, n8n и любой OpenAI-совместимый клиент работают без правок кода. Покрыты только чат-запросы: эмбеддинги, реранк, аудио и картинки щит не трогает.
+
+**Что находит.** 25 типов: `PERSON`, `LOCATION`, `EMAIL_ADDRESS`, `PHONE_NUMBER`, `URL`, `IP_ADDRESS`, `IP_PORT`, `DATE_TIME`, `PASSPORT`, `CREDIT_CARD`, `CVC`, `DRIVER_LICENSE`, `INN`, `KPP`, `OGRN`, `OGRNIP`, `SNILS`, `MILITARY_ID`, `BIRTH_CERTIFICATE`, `OMS`, `BANK_ACCOUNT`, `BIK`, `POSTAL_CODE`, `TELEGRAM`, `TOKEN` (ключи и токены доступа). Их же можно перечислить в `entities`; старые имена вроде `FIRST_NAME`, `CITY`, `PHONE`, `EMAIL` тоже принимаются. Незнакомый тип вернёт `422` со списком известных. Документы с контрольной суммой (ИНН, СНИЛС, карты, счета, БИК) ловят правила с проверкой суммы, имена, места, телефоны и ссылки находит нейросеть на базе ruBERT, дообученная на русских ПДн. Распознавание вероятностное: риск утечки становится сильно ниже, но гарантии, что найдено всё, нет.
+
+**Приватность.** Тексты мы не храним. Маппинг тег → оригинал возвращается **тебе** в ответе `/anonymize` и на нашей стороне сразу удаляется. Ты держишь его у себя и присылаешь обратно в `/deanonymize`. Для учёта повторов (см. цены) мы помним на час только хеш текста, по которому сам текст не восстановить.
+
+**Эндпоинты:**
+- `POST /v1/pii/anonymize`: `{text}` или `{texts:[…]}`, опционально `entities` (список типов, если нужно ловить только часть, например `["PERSON","PHONE_NUMBER"]`). Ответ: `{anonymized, mapping, action, quota}`. `anonymized` строка для `text` и массив для `texts`, `action` равен `ANONYMIZE`, если что-то нашлось, и `NONE`, если нет.
+- `POST /v1/pii/deanonymize`: `{text|texts, mapping}` → `{deanonymized, quota}`.
+- `GET /v1/pii/quota`: остаток квоты подписки на день и месяц. Когда квота кончилась, приходит `429` с `Retry-After`.
+
+**Батч.** В `texts` можно передать до 512 текстов за вызов, каждый до 1 млн знаков. Порядок ответа совпадает с порядком запроса.
+
+**Агентные сессии.** Агент на каждом шаге присылает историю целиком. Шли каждое сообщение отдельной строкой в `texts`: сообщения, которые этот же аккаунт уже присылал за последний час, считаются входом из кеша и стоят в 10 раз дешевле, а за их выход ты не платишь. Щит на ключе делает так сам.
+
+**Скорость.** Короткий текст обрабатывается за десятки миллисекунд, документ на 1 млн знаков около 4 секунд в первый раз и около 0,5 секунды повторно.
+
+> 🎁 **До 20.10 включительно анонимизация бесплатна для всех**: ни ручной API, ни щит на ключе ничего не списывают, баланс не нужен, квоты подписок на это время подняты до уровня Pro. Цены ниже действуют с 21.10.
+
+**Цены.** Считаем по токенам, как у моделей: платишь за вход и за выход, даже если ПДн в тексте не нашлось, потому что GPU всё равно поработала. Токены оцениваем по длине: примерно 2,3 знака русского текста на токен.
+
+| что | ₽ за 1M токенов |
+|---|---|
+| обезличивание, вход | 5 |
+| обезличивание, выход | 5 |
+| вход из кеша (текст, который ты уже присылал за час) | 0,5 |
+| восстановление, вход и выход | 1 и 1 |
+
+Пример. Агент с историей 300 тыс. знаков (около 130 тыс. токенов). Первый шаг стоит около 1,3 ₽ на обезличивание. Следующий шаг с той же историей и новым сообщением на 2 тыс. знаков стоит около 7 копеек: история идёт из кеша, платишь в основном за новое сообщение.
+
+С кошелька лимита нет, списание идёт по таблице выше. На подписке обезличивание входит в тариф с квотой в токенах на день и месяц, где вход из кеша считается за десятую часть. У щита на ключе есть свои лимиты расхода на запрос и на сутки, их видно и можно поменять в кабинете.
+
+```bash
+# 1. обезличить, mapping из ответа сохранить у себя
+curl https://api.neuraldeep.ru/v1/pii/anonymize \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"text":"Иван Петров, +79161234567, живёт в Москве"}'
+# → {"anonymized":"<PII type=\"PERSON\" gender=\"male\" id=\"1\" />, <PII type=\"PHONE_NUMBER\" id=\"2\" />, ...",
+#    "mapping":{"<PII type=\"PERSON\" gender=\"male\" id=\"1\" />":"Иван Петров", ...}, "action":"ANONYMIZE", "quota":{...}}
+
+# 2. восстановить ответ модели: теги → оригиналы, со склонением
+curl https://api.neuraldeep.ru/v1/pii/deanonymize \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"text":"Письмо для <PII type=\"PERSON\" gender=\"male\" id=\"1\" />","mapping":{...}}'
+```
+
+```python
+import httpx
+H = {"Authorization": "Bearer $YOUR_KEY"}
+API = "https://api.neuraldeep.ru/v1"
+
+# 1. обезличиваем текст пользователя
+a = httpx.post(f"{API}/pii/anonymize", headers=H,
+               json={"text": "Иван Петров, тел +79161234567, Москва"}).json()
+safe, mapping = a["anonymized"], a["mapping"]
+
+# 2. отправляем в ЛЮБУЮ модель без ПДн, просим сохранить теги
+resp = httpx.post(f"{API}/chat/completions", headers=H, json={
+    "model": "qwen3.6-35b-a3b",
+    "messages": [{"role": "system", "content": "Теги <PII .../> оставляй в ответе как есть, не меняй и не раскрывай."},
+                 {"role": "user", "content": safe}],
+}).json()["choices"][0]["message"]["content"]
+
+# 3. восстанавливаем ПДн в ответе модели тем же mapping
+final = httpx.post(f"{API}/pii/deanonymize", headers=H,
+                   json={"text": resp, "mapping": mapping}).json()["deanonymized"]
+print(final)
+```
+
+```python
+history = ["Привет, я Иван Петров", "Здравствуйте! Чем помочь?", "Мой ИНН 7707083893"]
+a = httpx.post(f"{API}/pii/anonymize", headers=H, json={"texts": history}).json()
+safe_history = a["anonymized"]   # массив в том же порядке
+# на следующем шаге шлёшь ту же историю + новое сообщение:
+# первые три строки пойдут как вход из кеша
+```
+
+## SpeechCore · транскрибация аудио/видео
+
+Отдельный сервис [speechcore.neuraldeep.ru](https://speechcore.neuraldeep.ru) — транскрибация длинных аудио и видео (файл до 2 ГБ): диаризация спикеров, тайм-коды по словам, экспорт SRT/VTT/TSV/DOCX/PDF. В вебе — вход через тот же Hub-аккаунт; **по API — тем же `sk-*` ключом**, что и для `/v1/*`. Для коротких аудио и OpenAI-совместимости есть также синхронный `whisper-1` (раздел «Транскрибация» выше) — SpeechCore же заточен под длинные записи и диаризацию.
+
+База API — `https://speechcore.neuraldeep.ru/api` (НЕ `api.neuraldeep.ru`). Лимит считается в **транскрипциях в день**, свой остаток ключ видит в `GET /usage` (поля `used_today`, `daily_limit`, `remaining`). Сверх лимита загрузка проходит с оплатой по минутам, если на кошельке есть деньги. Иначе придёт `429` с текстом про сброс («Сброс в 00:00 UTC (03:00 МСК).») и заголовком `Retry-After` до полуночи UTC. Работает **асинхронно**: `POST /upload` → `{task_id}` → опрашиваешь `GET /transcriptions/{id}/status` пока `status=completed` → забираешь результат: `GET /transcriptions/{id}` (JSON с сегментами, спикерами, `detected_language`, `duration`) или `GET /transcriptions/{id}/markdown` (текст с тайм-кодами). Сколько людей реально говорило: `GET /transcriptions/{id}/speakers?min_seconds=10` → `{speakers_count, active_speakers_count, speakers: [{speaker, seconds, segments, first_start, active}]}`. Активным считается спикер, который суммарно говорил не меньше `min_seconds` (по умолчанию 10 с), так в счёт не попадают реплики «угу» и обрывки.
+
+**Опции транскрибации** — query-параметры к `POST /upload` (файл — в multipart-теле, опции — в URL):
+
+- `diarize=true` — **разделение по спикерам**: в сегментах появляется поле `speaker` (`SPEAKER_00`, `SPEAKER_01`…), а в саммари — % времени говорения каждого. `diarize_speakers_num=N` (1–20) — подсказать точное число голосов, если оно известно (точнее, чем автоопределение). Если известно только, сколько людей пригласили, а сколько заговорит, нет, передавай `diarize_max_speakers=N` (1–20): это верхняя граница, сколько реально говорило, определит модель. Точное число в таком случае не ставь: модель разделит запись ровно на N голосов, даже если говорили меньше.
+- `language=ru` — зафиксировать язык (по умолчанию — автоопределение).
+- **Спец-слова / терминология:** `hotwords` — ключевые слова через пробел или запятую (≤500 симв.), которые модель будет распознавать точнее: имена, бренды, аббревиатуры, продукты (`NeuralDeep, Kimi, RAG, ФЗ-152`).
+- `initial_prompt` — контекст-промпт (≤2000 симв.): задаёт тематику/стиль и повышает точность на специфической лексике (`«Технический созвон про LLM-инфраструктуру»`).
+
+**Ошибки `POST /upload`.** `task_id` приходит только в ответе 200, поэтому сначала проверяй статус. При ошибке тело — `{"detail": "..."}` с причиной: **400** — неподдерживаемый формат файла (принимаются wav, flac, aiff, mp3, m4a, aac, ogg, oga, opus, wma, amr, mp4, m4v, mov, avi, mkv, webm, wmv, flv, 3gp, mpg, mpeg, ts), **401** — ключ неверный или отозван, **422** — параметр вне допустимых значений (например, `diarize_speakers_num` не в 1–20), **429** — исчерпан дневной лимит и на кошельке нет денег, **503** — сервис временно недоступен, повтори запрос позже.
+
+```bash
+# опции — в query-строке URL, файл — в multipart-теле (-F)
+curl -s "https://speechcore.neuraldeep.ru/api/upload?diarize=true&diarize_speakers_num=3&language=ru&hotwords=NeuralDeep,Kimi,RAG&initial_prompt=Технический%20созвон%20про%20LLM" \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -F "file=@meeting.mp3"
+```
+
+```bash
+# 1. загрузить (тот же sk-ключ, что и для /v1/*)
+tid=$(curl -s https://speechcore.neuraldeep.ru/api/upload \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  -F "file=@meeting.mp3" | jq -r .task_id)
+
+# 2. статус
+curl "https://speechcore.neuraldeep.ru/api/transcriptions/$tid/status" \
+  -H "Authorization: Bearer $YOUR_KEY"
+
+# 3. результат текстом (markdown с тайм-кодами)
+curl "https://speechcore.neuraldeep.ru/api/transcriptions/$tid/markdown" \
+  -H "Authorization: Bearer $YOUR_KEY"
+
+# свои транскрипции списком
+curl "https://speechcore.neuraldeep.ru/api/transcriptions?limit=20" \
+  -H "Authorization: Bearer $YOUR_KEY"
+```
+
+```python
+import time, httpx
+
+BASE = "https://speechcore.neuraldeep.ru/api"
+H = {"Authorization": "Bearer $YOUR_KEY"}
+
+# 1. загрузка файла (аудио/видео, до 2 ГБ) + опции в params
+params = {
+    "diarize": "true",            # разделение по спикерам
+    "diarize_speakers_num": 3,    # если число голосов известно
+    # "diarize_max_speakers": 20, # или только верхняя граница, например число участников встречи
+    "language": "ru",
+    "hotwords": "NeuralDeep, Kimi, RAG",          # спец-слова/термины
+    "initial_prompt": "Технический созвон про LLM",
+}
+with open("meeting.mp3", "rb") as f:
+    r = httpx.post(f"{BASE}/upload", headers=H, params=params, files={"file": f}, timeout=300)
+# task_id есть только в ответе 200; при ошибке тело — {"detail": "..."} с причиной
+if r.status_code != 200:
+    raise RuntimeError(f"upload {r.status_code}: {r.text}")
+tid = r.json()["task_id"]
+
+# 2. поллинг (раз в пару секунд)
+while True:
+    st = httpx.get(f"{BASE}/transcriptions/{tid}/status", headers=H)
+    st.raise_for_status()
+    st = st.json()
+    if st["status"] in ("completed", "failed"):
+        break
+    time.sleep(2)
+
+# 3. результат: сегменты + тайм-коды, или готовый markdown
+data = httpx.get(f"{BASE}/transcriptions/{tid}", headers=H).json()
+print("язык:", data["detected_language"], "длительность:", data["duration"])
+print(httpx.get(f"{BASE}/transcriptions/{tid}/markdown", headers=H).text)
+# сколько человек реально говорило (с разделением по спикерам)
+print(httpx.get(f"{BASE}/transcriptions/{tid}/speakers", headers=H).json()["active_speakers_count"])
+```
+
+**Возможности в веб-интерфейсе** ([speechcore.neuraldeep.ru](https://speechcore.neuraldeep.ru)), помимо API:
+
+- **Диаризация спикеров** — реплики размечены по говорящим (SPEAKER_00…), видно кто сколько говорил (% времени).
+- **Саммари встречи** — структурированное LLM-резюме (темы, решения, задачи) с учётом спикеров. Тем же sk-ключом.
+- **Чат по транскрипту** — вопросы к расшифровке («что решили по X?», «какие дедлайны?») с ответами по тайм-кодам.
+- **Экспорт** — SRT · VTT · TSV · DOCX · PDF · TXT, плюс markdown с тайм-кодами.
+- **Спец-слова и контекст** — поля hotwords / контекст-промпт прямо в форме загрузки (то же, что `hotwords`/`initial_prompt` в API).
+- **Публичная ссылка** — поделиться транскриптом на чтение без входа.
+- **Realtime** — потоковая транскрибация с микрофона/вкладки (через расширение «Meeting Recorder»).
+
+> Поллинг и выдача результата лимит не списывают — он тратится только при загрузке (1 файл = 1 транскрипция). Файл до 2 ГБ, загрузка должна уложиться в 30 минут; крупные файлы грузи целиком — обработка идёт в фоне на GPU, поэтому держи разумный таймаут на поллинге. Диаризация и спец-слова работают и в вебе, и по API одинаково.
+
+## Озвучка · TTS API
+
+Тем же ключом — синтез речи под `/v1/audio/speech`: текст → аудио (WAV 24 kHz). Модель **Qwen3-TTS** на наших GPU в РФ. Доступно на **всех тарифах**, отдельная корзина — лимит считается в **символах** входного текста. Формат запроса **OpenAI-совместимый**, работает **синхронно**: отправил текст → сразу получил аудио-файл.
+
+**8 голосов:** `vivian`, `serena`, `ono_anna`, `sohee` (жен) · `dylan`, `ryan`, `aiden`, `uncle_fu` (муж) — мультиязычные. **10 языков:** `Russian`, `English`, `German`, `French`, `Spanish`, `Italian`, `Chinese`, `Japanese`, `Korean`, `Portuguese` (+`Auto`). **Эмоцию и стиль** задаёшь свободным текстом в `instructions` («радостно», «спокойный диктор»). Список голосов: `GET /v1/audio/voices`. Остаток квоты приходит в каждом ответе заголовками `X-Quota-Day-Remaining` и `X-Quota-Month-Remaining`. Исчерпание: `429` с телом `quota_exceeded` и `Retry-After`.
+
+**🇷🇺 Русский — с ударениями.** При `language=Russian` озвучку берёт отдельная модель **ESpeech** (F5 + RUAccent) — она **корректно ставит ударения и резолвит омографы** по контексту (открыл замо́к → вошёл в за́мок), там где обычные TTS мажут. Прочие языки — на Qwen3-TTS. Какой движок озвучил, видно в ответном заголовке `X-TTS-Engine` (`espeech`/`qwen`). Хочешь задать ударение вручную — поставь `+` перед ударным гласным (`«зам+ок»`); если `+` уже есть в тексте, авто-акцентизатор не вмешивается.
+
+```bash
+# синтез (голос serena, русский) → файл
+curl -s https://api.neuraldeep.ru/v1/audio/speech \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"input":"Привет! Это синтез речи на наших серверах.","voice":"serena","language":"Russian"}' \
+  -o speech.wav
+
+# с эмоцией (через instructions)
+curl -s https://api.neuraldeep.ru/v1/audio/speech \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"input":"Поздравляю с релизом!","voice":"vivian","language":"Russian","instructions":"радостно, с энтузиазмом"}' \
+  -o happy.wav
+
+# ударение вручную через «+» (зам+ок = запор) — RUAccent не вмешивается, если «+» уже есть
+curl -s https://api.neuraldeep.ru/v1/audio/speech \
+  -H "Authorization: Bearer $YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"input":"Он повесил амбарный зам+ок.","voice":"serena","language":"Russian"}' \
+  -o stress.wav
+
+# список голосов
+curl https://api.neuraldeep.ru/v1/audio/voices -H "Authorization: Bearer $YOUR_KEY"
+```
+
+```python
+import httpx
+
+r = httpx.post(
+    "https://api.neuraldeep.ru/v1/audio/speech",
+    headers={"Authorization": "Bearer $YOUR_KEY"},
+    json={"input": "Текст для озвучки.", "voice": "dylan", "language": "Russian"},
+)
+open("speech.wav", "wb").write(r.content)
+```
+
+> Лимит считается в символах текста (`len(input)`), а не в запросах. Клонирование голоса по образцу пока недоступно.
+
+**Ограничения на вход и ошибки.**
+
+- `input` обязателен, до 5 000 символов на вызов. Пустой текст `400`, длиннее `413`. Длинный текст режьте по предложениям и склеивайте аудио.
+- Неизвестный `voice` даёт `400` со списком голосов. Голоса OpenAI (`alloy`, `nova` и другие) подменяются на близкие наши, поэтому OpenAI SDK работает как есть: `client.audio.speech.create(model="tts-1", voice="alloy", input=...)`. Какой голос озвучил, видно в заголовке `X-TTS-Voice`.
+- Ответ: WAV, 24 кГц, моно, 16 бит. Ответ должен уложиться в 120 секунд.
+- Попытка клонировать голос: `403`. Сбой синтеза: квота возвращается, приходит ошибка со статусом движка.
+
+## Диаризация · кто когда говорил
+
+Тем же ключом — разметка записи по спикерам под `/v1/audio/diarize`: аудио → отрезки «кто когда говорил». Модель **Nemotron-3-Diarization** на наших GPU в РФ, до **8 спикеров**, любой аудиоформат (WAV, MP3, OGG, M4A и другие), файл до 500 МБ и до 4 часов. Текст модель не распознаёт: для стенограммы по спикерам склейте ответ с `/v1/audio/transcriptions` по времени. Отдельная корзина — лимит считается в **минутах аудио**, округление вверх.
+
+```bash
+curl -s https://api.neuraldeep.ru/v1/audio/diarize \
+  -H "Authorization: Bearer $NEURALDEEP_API_KEY" \
+  -F file=@meeting.mp3
+```
+
+Ответ:
+
+```json
+{"duration": 61.0, "num_speakers": 2, "minutes_charged": 2,
+ "segments": [{"speaker": "SPEAKER_0", "start": 1.1, "end": 5.75},
+              {"speaker": "SPEAKER_1", "start": 17.28, "end": 21.26}]}
+```
+
+Номера спикеров идут по порядку первого появления. Поля формы: `response_format=rttm` вернёт стандартный RTTM, `min_duration=0.3` выбросит обрывки короче 0.3 с. Остаток минут: `GET /v1/audio/diarize/quota`, в блоках `day` и `month` поля `used`, `limit`, `remaining` и `reset_at`, как у поиска, OCR и картинок.
+
+**Ограничения на вход и ошибки.** Пустой файл `400`, файл больше 500 МБ `413`, запись длиннее 4 часов `413`, нечитаемое аудио `400`, `response_format` кроме `json` и `rttm` даёт `400`. Ответ должен уложиться в 300 секунд. Кончились минуты: `429` с `X-Quota-Pool`, `X-Quota-Scope`, `X-Quota-Reset` и `Retry-After`. Пустой кошелёк у ключа в режиме «Кошелёк»: `402`. Сбой на нашей стороне: `502`.
+
+Модель обучена без русского; на русской речи разметка спикеров и смен у нас совпала с эталоном, но первые секунды реплики иногда остаются без спикера.
+
+## Решения по тексту · выбор, шкала, да/нет, ранжирование
+
+Тем же ключом — структурные решения по тексту под `/v1/decisions`. Модель **FRIDA-Decisions** (ai-forever) на наших GPU в РФ отвечает на вопросы о тексте одним проходом энкодера, без генерации: ответ всегда один из объявленных вариантов с вероятностями, парсить нечего. Варианты пишутся текстом в самом запросе, поэтому новый набор меток — это новый JSON, а не дообучение. Подходит для роутинга запросов, интентов поддержки, модерации и разметки. Обычный запрос занимает около 20 мс.
+
+Автор модели — Артём Снегирёв ([@artemsnegirev](https://t.me/artemsnegirev)). Это развитие [ai-forever/FRIDA](https://huggingface.co/ai-forever/FRIDA) (эмбеддер `frida` у нас тоже есть) от автора канала [@dealerAI](https://t.me/dealerAI). Карточка на Hugging Face: [ai-forever/FRIDA-Decisions](https://huggingface.co/ai-forever/FRIDA-Decisions). Что такое отдельная модель решений и зачем она рядом с LLM, хорошо видно по [TypeSafe Jev](https://www.eesel.ai/blog/typesafe-jev-pricing): тот же класс задач, только у нас русскоязычная открытая модель на своих GPU в РФ.
+
+Четыре типа вопросов:
+
+| type | что спрашивает | что вернёт |
+|---|---|---|
+| `choice` | какой из вариантов подходит | ключ варианта и вероятности всех |
+| `score` | где текст на шкале | уровень и вероятности уровней |
+| `noul` | верно ли утверждение | `noul` = вероятность «да» |
+| `ranking` | порядок кандидатов | порядок и вероятности |
+
+```bash
+curl -s https://api.neuraldeep.ru/v1/decisions \
+  -H "Authorization: Bearer $NEURALDEEP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "state": "Здравствуйте, у меня не приходит код подтверждения уже час.",
+    "questions": {
+      "topic": {"type": "choice", "instructions": "К какой теме относится обращение?",
+                "criteria": {"login": "вход в аккаунт, коды, пароли",
+                             "payment": "оплата, списания, возвраты",
+                             "delivery": "доставка заказа"}},
+      "urgency": {"type": "score", "instructions": "Оцени срочность обращения.",
+                  "criteria": ["низкая", "средняя", "высокая"]},
+      "spam": {"type": "noul", "instructions": "Является ли сообщение спамом?"}
+    }
+  }'
+```
+
+Ответ:
+
+```json
+{"model": "frida-decisions",
+ "answers": {
+   "topic": {"type": "choice", "choice": "login", "confidence": 0.99,
+             "probabilities": {"login": 0.999, "payment": 0.001, "delivery": 0.001}},
+   "urgency": {"type": "score", "score": 0.39, "probabilities": {"0": 0.56, "1": 0.08, "2": 0.35}},
+   "spam": {"type": "noul", "noul": 0.04}},
+ "usage": {"questions": 3, "options": 8, "state_tokens": 17, "state_truncated": false, "units_charged": 1}}
+```
+
+`state` — текст или любой JSON, до 512 токенов (длиннее обрезается, тогда `state_truncated: true`). Инструкция вопроса — до 96 токенов, один вариант — до 256 токенов, длиннее модель обрезает с конца. До 32 вопросов и 512 вариантов в одном запросе, тело до 256 КБ. У `noul` поле `criteria` необязательно, можно задать свои описания `{"true": "...", "false": "..."}`. У `ranking` `criteria` — объект `{id: текст}` или список.
+
+Пишите варианты описаниями, а не голыми метками: модель сравнивает текст с описанием. `"сэндвич": "начинка между двумя ломтями хлеба"` против `"бутерброд": "один ломоть хлеба, начинка сверху"` различаются уверенно, а голые `"сэндвич"` и `"бутерброд"` дают почти монетку.
+
+Отдельная корзина — лимит считается в **единицах**: одна единица на каждые 16 вариантов запроса, вверх. Запрос выше на 8 вариантов стоит одну единицу, каталог из 40 интентов — три. Остаток — `GET /v1/decisions/quota`. В кошельке единица стоит 0.0001 ₽, то есть 10 копеек за 1000 запросов. Модель обучена на 71% русского и 29% английского.
+
+### Вторая модель: clef-flash
+
+Тот же эндпоинт и тот же формат, но с `"model": "clef-flash"`: модель [Cloudflare/clef-flash](https://huggingface.co/Cloudflare/clef-flash) (Qwen3.5-9B с головой решений, Apache-2.0) на нашей RTX 4090 в РФ. Она крупнее FRIDA в десять раз, поэтому читает длинный текст целиком (вместе со схемой до 8192 токенов против 512 у FRIDA), увереннее на английском и на тонких различиях. Типы `choice`, `score` и `noul`, `ranking` у неё нет. Обычный запрос занимает около 150 мс, длинный текст или две сотни вариантов — около секунды.
+
+```bash
+curl -s https://api.neuraldeep.ru/v1/decisions \
+  -H "Authorization: Bearer $NEURALDEEP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "clef-flash",
+       "state": "Положил колбасу на кусок хлеба сверху, без второго ломтя.",
+       "questions": {"t": {"type": "choice", "instructions": "Что это?",
+         "criteria": {"сэндвич": "начинка между двумя ломтями хлеба",
+                      "бутерброд": "один ломоть хлеба, начинка сверху"}}}}'
+```
+
+У `score` в ответе есть ещё `legend` (уровни шкалы), в `usage` — `input_tokens`. Квота общая с FRIDA, единица clef-flash считается за четыре: 0.0004 ₽ в кошельке.
+
+## Drift · персональный агент через API
+
+**Drift** — наш self-hosted AI-агент с памятью, sandbox'ом, скиллами и Google/Telegram-интеграциями. Обычно ты с ним общаешься на [neuraldeep.ru/driftagent](https://neuraldeep.ru/driftagent) или через Telegram-бота. Но можно ходить и через публичный API — из curl, Python-SDK, Cursor/Cline/Continue, своих ботов или CI.
+
+**Доступ:** только при оплаченном Drift (Starter / Pro). Trial и admin-grant — нет.
+**Лимиты:** наследуются от тарифа Hub-аккаунта (RPM / parallel / session / week — см. `limits` ниже).
+**Source-метка:** каждый запрос через API стампится как `source=api` — видно в логах кабинета и админки (web / api / telegram / scheduler).
+
+#### 1 · Выпустить токен
+
+Открой [Dashboard](/app) → секция «🤖 Drift API tokens» → «+ создать токен». Имя — для своих заметок («cursor», «my-bot», etc.). Plaintext значение (`dft_*`) показывается **один раз** при создании — скопируй сразу. Лимит 5 активных токенов на юзера. Отозвать можно в любой момент кнопкой «отозвать».
+
+#### 2 · Отправить сообщение
+
+OpenAI-совместимый `/v1/chat/completions`. Внутри запускается ReAct-агент с тулзами (sandbox shell, web-search, Google, etc.) — ответ может прилететь не сразу, агент может крутить несколько итераций. Stream через `stream: true` рекомендуется для длинных задач.
+
+```bash
+curl https://drift.neuraldeep.ru/v1/chat/completions \
+  -H "Authorization: Bearer dft_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-oss-120b",
+    "messages": [
+      {"role": "user", "content": "Что у меня запланировано на завтра?"}
+    ]
+  }'
+```
+
+```bash
+curl -N https://drift.neuraldeep.ru/v1/chat/completions \
+  -H "Authorization: Bearer dft_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-oss-120b",
+    "messages": [{"role":"user","content":"Прочитай мой MEMORY.md и пересскажи кратко"}],
+    "stream": true
+  }'
+
+# event-stream возвращает:
+#   data: {"choices":[{"delta":{"content":"..."}}],...}
+#   data: [DONE]
+```
+
+```python
+from openai import OpenAI
+
+# base_url указывает на Drift, токен — личный dft_*
+client = OpenAI(
+    api_key="dft_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    base_url="https://drift.neuraldeep.ru/v1",
+)
+
+# Non-stream
+r = client.chat.completions.create(
+    model="gpt-oss-120b",  # или qwen3.6-35b-a3b — две основные LLM Hub'а
+    messages=[{"role": "user", "content": "Запиши в память: проект Y стартует 1 июня"}],
+)
+print(r.choices[0].message.content)
+
+# Stream
+stream = client.chat.completions.create(
+    model="gpt-oss-120b",
+    messages=[{"role": "user", "content": "Покажи список моих файлов и пересскажи MEMORY.md"}],
+    stream=True,
+)
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+```
+
+> Поле `model` — это какой upstream LLM использовать внутри агента: `gpt-oss-120b` (131k ctx, длинный reasoning, рекомендуется по умолчанию) или `qwen3.6-35b-a3b` (256k ctx, нативные tool-calls). Если не указать — fallback на gpt-oss-120b.
+> **Не передавай весь history** в `messages` — Drift сам поднимает память из своей БД, иначе будет дубль. Шли только последний user-промпт.
+
+#### 3 · Управлять чатами (conversations)
+
+По умолчанию все сообщения идут в один дефолтный чат юзера. Если хочешь разделять контексты (например, рабочий и личный) — создавай chat'ы явно и передавай `conversation_id`.
+
+```bash
+# список своих чатов
+curl https://drift.neuraldeep.ru/v1/conversations \
+  -H "Authorization: Bearer dft_..."
+
+# создать новый
+curl -X POST https://drift.neuraldeep.ru/v1/conversations \
+  -H "Authorization: Bearer dft_..." \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Project X — research"}'
+# → {"id": 1234, "title": "Project X — research", ...}
+
+# отправить сообщение в конкретный чат
+curl -X POST https://drift.neuraldeep.ru/v1/chat/completions \
+  -H "Authorization: Bearer dft_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-oss-120b",
+    "messages": [{"role":"user","content":"Какой статус по project X?"}],
+    "conversation_id": 1234
+  }'
+
+# удалить чат
+curl -X DELETE https://drift.neuraldeep.ru/v1/conversations/1234 \
+  -H "Authorization: Bearer dft_..."
+```
+
+#### 4 · Прочитать историю
+
+```bash
+curl "https://drift.neuraldeep.ru/v1/history?conversation_id=1234&limit=50" \
+  -H "Authorization: Bearer dft_..."
+# → {"messages":[{"id":..., "role":"user|assistant", "content":"...", "created_at":..., "source":"api"}, ...]}
+```
+
+> Поле `source` в каждом сообщении показывает откуда оно пришло: `web` (neuraldeep.ru/driftagent), `api` (этот endpoint), `telegram` (бот), `scheduler` (фоновая задача по расписанию). Используй его если у тебя смешанные источники и нужно фильтровать.
+
+#### Что НЕ поддерживается
+
+· редактирование/regenerate сообщений (только append) · · branching (forks) · · webhook'и события · · multi-image в одном сообщении (один — да, через `/v1/files/upload`)
+
+> **Свои tools / skills / MCP-серверы** — поддерживается с 28.05.26. См. раздел «🔌 Свои tools, skills, MCP» ниже: можно передавать caller-tools (return-to-caller pattern), inline SKILL.md и подключать remote MCP-серверы прямо в запросе.
+
+## Drift · файлы + sandbox preview
+
+У Drift'а свой workspace в MinIO (per-user, изолированный) и под капотом — Docker-sandbox с предустановленными `openpyxl / pandas / pdfplumber / pypdf / python-docx / Pillow / chardet / bs4 / lxml`. Аплоадишь файл — он попадает и в MinIO, и сразу в sandbox; модель видит **preview первых страниц/строк** в init-промпте без лишних tool-calls.
+
+```bash
+curl -X POST https://drift.neuraldeep.ru/v1/files/upload \
+  -H "Authorization: Bearer dft_xxxxxxxx" \
+  -F file=@./report.pdf
+# → {"uploaded":[{"name":"report.pdf","path":"report.pdf","size":48863,
+#                 "preview":"...первые 2 страницы PDF..."}]}
+```
+
+```python
+import httpx
+TOKEN = "dft_xxxxxxxx"
+BASE  = "https://drift.neuraldeep.ru/v1"
+
+# 1) upload
+with open("report.pdf","rb") as f:
+    up = httpx.post(f"{BASE}/files/upload",
+                    headers={"Authorization": f"Bearer {TOKEN}"},
+                    files={"file": ("report.pdf", f, "application/pdf")}).json()
+print("preview:", up["uploaded"][0]["preview"][:200])
+
+# 2) ask agent — он уже видит preview в init prompt
+r = httpx.post(f"{BASE}/chat/completions",
+    headers={"Authorization": f"Bearer {TOKEN}"},
+    json={"model":"qwen3.6-35b-a3b","messages":[
+        {"role":"user","content":"Резюмируй report.pdf"}
+    ]}).json()
+print(r["choices"][0]["message"]["content"])
+```
+
+> Preview-форматы: PDF → 2 страницы (pdfplumber), XLSX → первый лист 20 строк (openpyxl), CSV/TXT/JSON/MD → 6000 символов, DOCX → 6000 символов. Для остального — preview `null`, модель сама позовёт `read_file` или python в sandbox.
+
+> **Лимиты:** 20 MB на файл, 8 файлов на запрос. Sandbox UTF-8, кириллица в именах работает.
+> **analyze_image** работает *только* на растровых картинках (.png/.jpg/.webp/...). PDF читай через preview или `pdfplumber`.
+
+## Drift · свои tools, skills, MCP
+
+С 28.05.26 в `/v1/chat/completions` можно передавать **свои** инструменты, скиллы и remote MCP-серверы. Полная схема — в примерах ниже.
+
+#### tools — return-to-caller (как OpenAI)
+
+Передаёшь массив `tools` в формате OpenAI. Если модель решит позвать инструмент — она вернёт `finish_reason: "tool_calls"` с JSON-аргументами. **Исполняешь ты сам** в своей среде (Drift не запускает твой код), результат шлёшь обратно в `messages`.
+
+```python
+from openai import OpenAI
+
+client = OpenAI(api_key="dft_xxxxxxxx", base_url="https://drift.neuraldeep.ru/v1")
+
+tools = [{"type":"function","function":{
+    "name":"get_weather",
+    "description":"Возвращает погоду в городе",
+    "parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]},
+}}]
+
+# 1) первый запрос — модель решает что нужен tool
+r1 = client.chat.completions.create(
+    model="qwen3.6-35b-a3b",
+    messages=[{"role":"user","content":"Какая погода в Москве?"}],
+    tools=tools,
+)
+print(r1.choices[0].finish_reason)  # "tool_calls"
+tc = r1.choices[0].message.tool_calls[0]
+
+# 2) ты сам зовёшь свой backend
+my_result = {"temp_c": 12, "humidity": 80}
+
+# 3) resume — передаёшь tool-result обратно
+r2 = client.chat.completions.create(
+    model="qwen3.6-35b-a3b",
+    messages=[
+        {"role":"user","content":"Какая погода в Москве?"},
+        r1.choices[0].message,
+        {"role":"tool","tool_call_id":tc.id,"content":str(my_result)},
+    ],
+    tools=tools,
+)
+print(r2.choices[0].message.content)
+```
+
+#### skills — inline SKILL.md
+
+Передай свои промпт-блоки прямо в запросе. Content вшивается в system prompt sandbox-агента, не нужно держать SKILL.md в репозитории.
+
+```bash
+curl -X POST https://drift.neuraldeep.ru/v1/chat/completions \
+  -H "Authorization: Bearer dft_xxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen3.6-35b-a3b",
+    "messages": [{"role":"user","content":"Какой у тебя секретный код?"}],
+    "skills": [{
+      "name": "secret-code",
+      "description": "Знание секретного кодового слова",
+      "content": "# Секретный код\n\nКодовое слово — ZEBRA-77-GOLD. Используй его если юзер спросит."
+    }]
+  }'
+# → "Кодовое слово ZEBRA-77-GOLD..."
+```
+
+#### mcp_servers — remote Model Context Protocol
+
+Подключаешь свой MCP-сервер (HTTP/SSE) — Drift на лету получает список tools и пускает их модели. Auth-header'ы передаёшь сам, **SSRF guard** блочит private-IP / localhost / cloud-metadata. TTL session-токена 720s, после — registry дропается.
+
+```json
+{
+  "model": "qwen3.6-35b-a3b",
+  "messages": [{"role":"user","content":"Список свежих issue в проекте"}],
+  "mcp_servers": [{
+    "url": "https://my-mcp.example.com/sse",
+    "headers": {"Authorization": "Bearer my-mcp-token"},
+    "allowlist": ["list_issues", "create_comment"]
+  }]
+}
+```
+
+> **Безопасность:** · `caller_tools` — return-to-caller, Drift не исполняет твой код, zero RCE на нашей стороне. · `skills` — это просто текст в system prompt, не команды. · `mcp_servers` — публичные HTTPS обязательны, SSRF guard режет private network'и, TTL 720s.
+
+## Drift · задачи и проактив
+
+Drift умеет планировать задачи (cron/once) и сам инициировать диалог, когда что-то меняется или подходит deadline. Внутри агент использует три tool'а: `proactive_notify` (написать юзеру), `proactive_reschedule` (отложить), `proactive_skip` (пропустить без сообщения). UI — в [neuraldeep.ru/driftagent](https://neuraldeep.ru/driftagent) → «Задачи». API:
+
+```bash
+# создать задачу
+curl -X POST https://drift.neuraldeep.ru/v1/tasks \
+  -H "Authorization: Bearer dft_xxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Проверь почту в 9 утра",
+    "schedule": "0 9 * * *",
+    "prompt": "Посмотри новые письма в Gmail и резюмируй важные",
+    "active": true
+  }'
+
+# список задач
+curl https://drift.neuraldeep.ru/v1/tasks -H "Authorization: Bearer dft_xxxxxxxx"
+
+# запустить сейчас
+curl -X POST https://drift.neuraldeep.ru/v1/tasks/{task_id}/run \
+  -H "Authorization: Bearer dft_xxxxxxxx"
+
+# удалить
+curl -X DELETE https://drift.neuraldeep.ru/v1/tasks/{task_id} \
+  -H "Authorization: Bearer dft_xxxxxxxx"
+```
+
+> Schedule — стандартный cron-syntax (5-полевой). Drift проверяет задачи раз в минуту. Если ты в proactive-выводе зовёшь `proactive_skip` — юзеру push не уходит, задача отмечена «skipped». `proactive_reschedule(seconds=N)` — сдвигает следующий запуск, не меняя cron.
+
+## Drift · память
+
+У каждого юзера в Drift есть постоянная память — `MEMORY.md` в его workspace + per-conversation сжатая история. Агент сам решает что записать ([[remember-the-X]] паттерн в reasoning), но через API можно и снаружи дёргать.
+
+```bash
+# прочитать
+curl https://drift.neuraldeep.ru/v1/memory \
+  -H "Authorization: Bearer dft_xxxxxxxx"
+# → {"content":"# Memory\n\n- Имя: Иван\n- Тариф: starter\n..."}
+
+# перезаписать (осторожно — переписывает всё)
+curl -X PUT https://drift.neuraldeep.ru/v1/memory \
+  -H "Authorization: Bearer dft_xxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"# Memory\n\n- Проект Y стартует 1 июня"}'
+```
+
+> Обычно проще не дёргать API напрямую — попроси агента *«Запомни Х»* в диалоге, он сам решит формат и не сломает существующие заметки.
+
+## Drift · изоляция и безопасность
+
+Каждый юзер Drift живёт в **per-user Docker-контейнере** с эфемерным volume `daisy-ws-{uid}`. Кросс-юзерного доступа нет.
+
+Что обеспечивается:
+
+- · **Sandbox boundary** — внутри контейнера юзер видит ровно `/workspace` (без uid в пути), нет mount'а соседей.
+- · **SSRF guard** на MCP-URL и tool `fetch_url` — блок на private/loopback/link-local/cloud-metadata.
+- · **Auth** — каждый запрос верифицируется по `dft_*` токену; 5 активных токенов на юзера, мгновенный revoke.
+- · **Доступ** — Drift открыт всем, у кого на ключе есть Qwen: Free на Qwen 3.6, платные тарифы со своими моделями, Kimi K2.6 на Starter и Pro.
+- · **Session TTL** — MCP registry в памяти core, drop через 720s или при finally в dispatch.
+- · **Privacy** — тело запросов к моделям сохраняется, только если включена история в кабинете хаба; иначе остаются одни метрики. Не обучаемся на твоих данных.
+
+## Настройки агента
+
+Выберите тариф, опции и агента, затем скопируйте файл по указанному пути.
+
+Как считаются числа:
+
+- потоки агенту - около трёх четвертей `parallel`, остаток для других запросов с тем же ключом;
+- пауза между запросами - 60 секунд, делённые на чат-RPM;
+- таймаут запроса - две трети потолка гейта;
+- тишина в стриме - 60 секунд;
+- ретраев три, длинные окна session/week повторами не переждать.
+
+Не каждый агент умеет задать все эти числа в файле, что применилось, видно в оговорках под конфигом.
+
+## Лимиты и коды ошибок
+
+У чат-моделей одновременно действуют четыре лимита: `session` (окно 3 часа по UTC), `week` (ISO-неделя), параллельность (сколько запросов в работе одновременно) и запросы в минуту. Любой из них даёт `429`, ретраить нужно по конкретной причине. Чем выше тариф, тем шире все четыре. Свои остатки ключ видит в [`GET /v1/limits`](#limits-api), общая таблица ошибок в разделе [начало работы](#start).
+
+> При 429 у агента смотрите, какое окно сработало. Начните с [подключения клиента](#agents), затем используйте [конструктор настроек](#agent-config) и примечания своего профиля. Универсального поля одновременности для всех клиентов нет.
+
+Заголовки на наших 429:
+
+- `X-Window`: какое окно сработало (`session`, `week`, `chat_rpm`, `account-rpm`, `account-inflight`, `key-rpm`, `daily-capacity`, `abuse` и другие, полный список в [начале работы](#start));
+- `X-Tier`: тариф ключа;
+- `Retry-After` и `Retry-After-Ms`: через сколько можно повторить.
+
+**Потолок входа на free.** На бесплатном тарифе один запрос к чат-модели ограничен **46 112 токенами входа**, считая и сообщения, и схемы инструментов. Это потолок тарифа, а не модели: в каталоге стоит окно модели (у qwen3.6-35b-a3b это 262 144). Запрос длиннее получает 400:
+
+```json
+{"error": {"message": "Слишком длинный запрос: 52000 токенов входа при пределе 46112 на бесплатном тарифе. Считаются и сообщения, и схемы инструментов... (maximum context length is 46112 tokens)", "code": "400"}}
+```
+
+Эффективное окно своего ключа видно в `GET /v1/models`: `limit.context` уже с учётом тарифа. Если окно урезано тарифом, рядом лежат `limit.context_model` (полное окно модели) и `limit.context_reason: "tier"`. Агенту лучше брать число отсюда, а не из таблицы моделей.
+
+```bash
+curl -s https://api.neuraldeep.ru/v1/models -H "Authorization: Bearer $YOUR_KEY" \
+  | jq '.data[] | select(.id=="qwen3.6-35b-a3b") | .limit'
+```
+
+Потолок действует только на ключ в режиме «Подписка». Ключ в режиме «Кошелёк» и любой платный тариф получают полное окно модели. Частая ловушка: кошелёк пополнен, а ключ остался в «Подписке» и по-прежнему живёт по правилам free. Режим переключается у каждого ключа на странице [ключей](https://hub.neuraldeep.ru/app/keys).
+
+Примеры тел 429:
+
+```json
+// X-Window: session, лимит на 3 часа исчерпан
+{"error": {"message": "Лимит запросов тарифа на 3 часа исчерпан. Пауза до 15:00 UTC. Сбросить лимит сразу: https://hub.neuraldeep.ru/app/resets, больше объёма: тариф выше (https://neuraldeep.ru/pricing) или ключ в режиме «Кошелёк» (https://hub.neuraldeep.ru/app/keys). Limit resets at: 2026-10-22 15:00:00 UTC", "code": "429"}}
+
+// X-Window: week
+{"error": {"message": "Недельный лимит запросов тарифа исчерпан, сброс в понедельник 00:00 UTC. Сбросить лимит сразу: ... Limit resets at: 2026-10-26 00:00:00 UTC", "code": "429"}}
+
+// X-Window: chat_rpm, запросов в минуту больше, чем позволяет тариф
+{"error": {"message": "Слишком много запросов в минуту (потолок тарифа N). Повторите через 58 с. Limit resets at: ...", "code": "429"}}
+
+// X-Window: key-rpm (key-tpm, key-parallel), лимит самого ключа
+{"error": {"message": "Превышен лимит запросов ключа в минуту. Повторите через 12 с. Limit resets at: ...", "code": "429"}}
+
+// X-Window: daily-capacity
+{"error": {"message": "Дневная ёмкость ключа исчерпана, сброс в 00:00 UTC. Больше объёма: тариф выше (...) или ключ в режиме «Кошелёк» (...). Limit resets at: ...", "code": "429"}}
+
+// X-Window: abuse, клиент повторял запрос после отказа
+{"error": {"message": "Запросы с аккаунта приостановлены на 60 мин: клиент много раз подряд повторял запрос после отказа по лимиту. Делайте паузу по заголовку Retry-After. Limit resets at: ...", "code": "429"}}
+```
+
+Чтобы не попасть на паузу за повторы, ретраите только после `Retry-After`. Тексты приходят на языке кабинета владельца ключа (или по `Accept-Language`), хвост `Limit resets at:` всегда одинаковый.
+
+Коды ответа гейта моделей:
+
+- 200: всё хорошо;
+- 400: вход длиннее окна модели или потолка free, невалидное тело запроса;
+- 401: ключ неверный или отозван, модели нет в ключе;
+- 402: на кошельке кончились деньги, а модель оплачивается по токенам (`X-Wallet: empty`). Модели тарифа продолжают работать;
+- 403: модель не входит в тариф (`X-Window: free-model`);
+- 429: лимит, читайте `X-Window` и `Retry-After`. Бесплатная квота транскрибации тоже здесь (`X-Window: stt-free-daily`);
+- 502 и 503: модель временно недоступна, повторите через несколько секунд. Если модель перегружена у поставщика, придёт `503` с текстом «Модель временно перегружена у поставщика. Повторите через минуту или выберите другую модель.»;
+- 504: модель не ответила за отведённое время, повторите или сократите запрос.
+
+## Книга «Агенты и вайб-кодинг» · поиск и MCP
+
+Практический курс о работе с ИИ-агентами — 42 главы — доступен как поиск для агентов. **Нужен твой ключ Hub** — тот же `sk-`, что и для чата. Читалка на сайте открыта всем без ключа — [neuraldeep.ru/learn/books/agenty-vajbkoding](https://neuraldeep.ru/learn/books/agenty-vajbkoding).
+
+Поиск гибридный: полнотекстовый BM25 плюс векторный по эмбеддингам `giga-embeddings` (370 чанков, нарезка по абзацам). Они ошибаются по-разному — полнотекстовый находит точное слово, но бессилен, когда спрашивают другими словами; векторный ловит смысл, но промахивается мимо термина. Слияние закрывает обе дыры, поэтому `mode=hybrid` стоит по умолчанию.
+
+```bash
+curl -G "https://neuraldeep.ru/api/v1/books/agenty-vajbkoding/search" \
+  -H "Authorization: Bearer $YOUR_KEY" \
+  --data-urlencode "q=сколько стоит держать много скиллов" \
+  --data-urlencode "mode=hybrid" --data-urlencode "limit=5"
+```
+
+```json
+{
+  "query": "…", "mode": "hybrid", "used_vector": true,
+  "hits": [{
+    "chapter": "ch12",
+    "chapter_title": "Скиллы: механика и жизненный цикл",
+    "label": "Глава 12",
+    "score": 0.032,
+    "text": "Скиллы платные, даже когда не используются…",
+    "url": "https://neuraldeep.ru/learn/books/agenty-vajbkoding/ch12"
+  }]
+}
+```
+
+**Эндпоинты**
+
+| метод | что делает |
+|---|---|
+| `GET /api/v1/books` | список книг |
+| `GET /api/v1/books/{slug}/toc` | оглавление: главы, приложения, модули |
+| `GET /api/v1/books/{slug}/chapter/{id}` | полный текст главы (`ch12`, `appА`) |
+| `GET /api/v1/books/{slug}/search` | поиск: `q`, `mode` = `hybrid`\|`fts`\|`vector`, `limit` 1–20 |
+
+**MCP-сервер** — тот же поиск инструментами для твоего агента:
+
+```json
+{
+  "mcpServers": {
+    "neuraldeep-book": {
+      "type": "http",
+      "url": "https://neuraldeep.ru/api/mcp/book",
+      "headers": { "Authorization": "Bearer $YOUR_KEY" }
+    }
+  }
+}
+```
+
+Инструменты: `book_search` (гибридный поиск), `book_chapter` (глава целиком), `book_toc` (оглавление). Транспорт — JSON-RPC поверх HTTP, состояния сервер не держит. Без ключа — 401.
+
+**Ограничения.** 60 запросов в минуту на ключ. Счёт идёт по владельцу ключа, а не по адресу, — доп-ключи считаются вместе с основным. Ответы модели по книге остаются в читалке: за ними GPU, и там действует лимит тарифа (free 10 вопросов в сутки).
+
+Книга собрана из полугода переписки сообщества [t.me/aostrikov_agents_chat](https://t.me/aostrikov_agents_chat).
+
+## Стриминг · SSE
+
+Добавь `"stream": true` → ответ приходит SSE-потоком: чанки `data: {...}`, последний — `data: [DONE]`. Работает на всех чат-моделях и при tool-calling.
+
+## SDK · Python / JS
+
+OpenAI-совместимо — подойдут официальные SDK, только поменяй `base_url`.
+
+```python
+from openai import OpenAI
+client = OpenAI(api_key="$YOUR_KEY", base_url="https://api.neuraldeep.ru/v1")
+r = client.chat.completions.create(model="gpt-oss-120b", messages=[...], max_tokens=500)
+```
+
+```typescript
+import OpenAI from "openai";
+const client = new OpenAI({ apiKey: "$YOUR_KEY", baseURL: "https://api.neuraldeep.ru/v1" });
+```
+
+## Privacy · хранение данных
+
+По умолчанию тело запроса и ответа **не сохраняется**: ни в базе, ни в файловом хранилище. От запроса остаются только метрики: модель, токены, статус, время ответа.
+
+- **Хранение истории запросов** (по умолчанию выключено) — переключатель в кабинете, раздел «Приватность». Включишь, и новые запросы вместе с телом появятся в разделе «Запросы». Выключишь, и новые запросы сохраняться перестанут. Сохранённые тела живут 30 дней, потом удаляются.
+- **Аналитики по текстам нет.** Модель тексты запросов не читает и не размечает.
+- Чтобы видеть, что сервис работает, дежурный видит последние ~1000 запросов вместе с ответами. Эта лента живёт в оперативной памяти не дольше 15 минут и вытесняется новыми запросами, на диск не пишется.
+
+На твоих данных не обучаемся, данные не продаём. Метрики (время ответа, токены, статус) собираются всегда, без текста запросов.

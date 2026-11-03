@@ -1,0 +1,4 @@
+{
+  "_help": "Per upstream model ID. Metadata only when evidenced; parameters are explicit user overrides forwarded to NeuralDeep. Unknown effort remains unknown, not fabricated.",
+  "models": {}
+}
