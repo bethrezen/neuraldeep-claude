@@ -78,7 +78,7 @@ thinking, сохранение и числовой бюджет; первичн�
 
 Собственные Qwen-лейны NeuralDeep могут снимать параметры или менять default;
 их документированные ограничения имеют приоритет над общим upstream-профилем.
-[NeuralDeep Chat](https://neuraldeep.ru/docs/chat.md).
+[NeuralDeep Chat](https://neuraldeep.ru/docs/chat.md?ref=W9VMAZP).
 
 ## MiniMax
 

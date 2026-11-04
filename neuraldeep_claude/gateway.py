@@ -142,7 +142,7 @@ def serve(root: Path, port: int = 8787):
                 upstream = protocol.to_openai(body, model, model["upstream_id"])
                 request_id = uuid.uuid4().hex
                 started = time.monotonic()
-                metric({"event": "request", "id": request_id, "model": model["id"], "billing": model["billing"], "messages": len(upstream.get("messages", [])), "tools": len(upstream.get("tools", [])), "max_tokens": upstream.get("max_tokens"), "stream": bool(upstream.get("stream")), "effort_requested": (body.get("output_config") or {}).get("effort"), "effort_applied": upstream.get("reasoning_effort"), **helper_routing})
+                metric({"event": "request", "id": request_id, "model": model["id"], "billing": model["billing"], "messages": len(upstream.get("messages", [])), "tools": len(upstream.get("tools", [])), "max_tokens": upstream.get("max_tokens"), "stream": bool(upstream.get("stream")), "effort_requested": (body.get("output_config") or {}).get("effort"), "effort_applied": upstream.get("reasoning_effort"), "images_requested": protocol.count_anthropic_image_blocks(body), "images_sent": protocol.count_image_attachments(upstream), **helper_routing})
                 mode = model["billing"]
                 limit = max(1, int(cat.get("limits", {}).get(mode, {}).get("parallel_limit") or 1))
                 sem = semaphore(mode, limit)

@@ -1,4 +1,13 @@
 {
-  "_help": "Per upstream model ID. Metadata only when evidenced; parameters are explicit user overrides forwarded to NeuralDeep. Unknown effort remains unknown, not fabricated.",
-  "models": {}
+  "_help": "Per upstream model ID. Metadata only when evidenced; parameters are explicit user overrides forwarded to NeuralDeep. Unknown effort remains unknown, not fabricated. max_image_attachments is the gateway-side per-request image budget enforced in protocol.to_openai (measured against NeuralDeep /v1/chat/completions): null = unlimited lane, integer = keep the newest N image parts and replace older ones with a text note.",
+  "_measured": "2026-11-04 /v1/chat/completions probes, tiny PNGs, counting the whole request (user + tool results, any MIME): qwen3.8-flash-next-ru, qwen3.8-27b, qwen3.8-27b-noreason, qwen3.6-35b-a3b(-noreason), qwen3.6-fp8(-noreason), gpt-oss-120b accept 4 images and return HTTP 400 'Слишком много вложений одного типа для этой модели' at 5. gemma-4-31b, kimi-k2.6, claude-haiku-5.5, claude-sonnet-5.5 and claude-opus-5.5 accepted 12. The provider documents no limit numbers, so lanes without measurements keep the conservative default of 4.",
+  "models": {
+    "gemma-4-31b": { "max_image_attachments": null },
+    "gemma-4-31b-noreason": { "max_image_attachments": null },
+    "gemma-b24": { "max_image_attachments": null },
+    "kimi-k2.6": { "max_image_attachments": null },
+    "claude-haiku-5.5": { "max_image_attachments": null },
+    "claude-sonnet-5.5": { "max_image_attachments": null },
+    "claude-opus-5.5": { "max_image_attachments": null }
+  }
 }

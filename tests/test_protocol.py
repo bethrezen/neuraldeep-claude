@@ -79,6 +79,55 @@ class ProtocolTests(unittest.TestCase):
         high = protocol.to_openai({"output_config": {"effort": "high"}}, self.model, "actual")
         self.assertEqual(high["reasoning_effort"], "xhigh")
 
+    def image(self, tag):
+        return {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": tag}}
+
+    def screenshot_roundtrip(self, count):
+        # Mirrors how Claude Code replays tool screenshots: an assistant tool_use
+        # followed by user tool_results carrying image blocks, oldest first.
+        calls = [{"type": "tool_use", "id": f"c{i}", "name": "read", "input": {}} for i in range(count)]
+        results = [{"type": "tool_result", "tool_use_id": f"c{i}",
+                    "content": [{"type": "text", "text": f"shot {i}"}, self.image(f"img{i}")]} for i in range(count)]
+        return protocol.to_openai({"messages": [
+            {"role": "assistant", "content": calls},
+            {"role": "user", "content": results + [{"type": "text", "text": "continue"}]}]}, self.model, "actual")
+
+    def test_image_attachments_are_capped_to_the_recent_window(self):
+        request = self.screenshot_roundtrip(10)
+        images = [part for message in request["messages"] if isinstance(message.get("content"), list)
+                  for part in message["content"] if part.get("type") == "image_url"]
+        self.assertEqual(len(images), 4)
+        kept = {part["image_url"]["url"] for part in images}
+        self.assertEqual(kept, {f"data:image/png;base64,img{i}" for i in range(6, 10)})
+        self.assertEqual([m["role"] for m in request["messages"]], ["assistant"] + ["tool"] * 10 + ["user"])
+        self.assertIn("provider attachment limit", str(request["messages"][6]["content"]))
+        self.assertTrue(str(request["messages"][1]["content"]).startswith("shot 0"))
+        self.assertNotIn("img0", str(request["messages"][1]["content"]))
+
+    def test_model_attachment_budget_and_unlimited_lanes_are_respected(self):
+        unlimited = self.model | {"max_image_attachments": None}
+        request = protocol.to_openai({"messages": [
+            {"role": "user", "content": [self.image(str(i)) for i in range(8)]}]}, unlimited, "actual")
+        self.assertEqual(protocol.count_image_attachments(request), 8)
+        capped = protocol.to_openai({"messages": [
+            {"role": "user", "content": [self.image(str(i)) for i in range(8)]}]}, self.model | {"max_image_attachments": 2}, "actual")
+        self.assertEqual(protocol.count_image_attachments(capped), 2)
+        # A single oversized attachment must still reach the provider.
+        oversized = protocol.to_openai({"messages": [{"role": "user", "content": [self.image("big")]}]}, self.model, "actual")
+        self.assertEqual(protocol.count_image_attachments(oversized), 1)
+        with self.assertRaisesRegex(ValueError, "max_image_attachments"):
+            protocol.to_openai({"messages": [{"role": "user", "content": [self.image("a")]}]},
+                               self.model | {"max_image_attachments": 0}, "actual")
+
+    def test_anthropic_image_blocks_are_counted_where_metrics_need_them(self):
+        request = self.screenshot_roundtrip(10)
+        self.assertEqual(protocol.count_image_attachments(request), 4)
+        body = {"messages": [{"role": "user", "content": [
+            {"type": "tool_result", "tool_use_id": "a", "content": [self.image("x"), {"type": "text", "text": "t"}]},
+            {"type": "text", "text": "hello"}]}]}
+        self.assertEqual(protocol.count_anthropic_image_blocks(body), 1)
+        self.assertEqual(protocol.count_anthropic_image_blocks({"messages": []}), 0)
+
     def test_preserve_all_thinking_edit_and_published_output_cap(self):
         model = self.model | {"limit": {"output": 8000}}
         request = protocol.to_openai({"messages": [{"role": "assistant", "content": [

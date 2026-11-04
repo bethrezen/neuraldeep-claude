@@ -6,7 +6,7 @@
 
 - Основной адрес: `https://api.neuraldeep.ru/v1`, Bearer-ключ.
 - Официально документированы OpenAI Chat Completions и Responses. Поддержка Anthropic Messages, token counting или нативной Claude Code интеграции в прочитанной документации не заявлена. Для Claude Code требуется адаптер протокола, если отдельная фактическая проверка не установит иное.
-- [Начало работы](https://neuraldeep.ru/docs/start.md), [чат](https://neuraldeep.ru/docs/chat.md), [подключение агентов](https://neuraldeep.ru/docs/agents.md), [полная справка](https://neuraldeep.ru/llms-full.txt).
+- [Начало работы](https://neuraldeep.ru/docs/start.md?ref=W9VMAZP), [чат](https://neuraldeep.ru/docs/chat.md?ref=W9VMAZP), [подключение агентов](https://neuraldeep.ru/docs/agents.md?ref=W9VMAZP), [полная справка](https://neuraldeep.ru/llms-full.txt?ref=W9VMAZP).
 
 ## Каталог и два ключа
 
@@ -14,7 +14,7 @@
 
 Каталог подписки может содержать недоступные этому ключу модели. Публичный `premium: true` означает оплату только кошельком; `premium: false` не доказывает доступность в конкретной подписке. Доступ подтверждает вызов модели. В маршрутизаторе нужно сохранять отдельные идентификаторы подписки и кошелька, предпочитать подписку и не переходить на оплату незаметно после ошибки квоты.
 
-[Лимиты контекста](https://neuraldeep.ru/docs/limits.md), [машинный прайс](https://neuraldeep.ru/api/public/wallet-prices), [тарифные пределы](https://neuraldeep.ru/api/public/tier-limits).
+[Лимиты контекста](https://neuraldeep.ru/docs/limits.md?ref=W9VMAZP), [машинный прайс](https://neuraldeep.ru/api/public/wallet-prices?ref=W9VMAZP), [тарифные пределы](https://neuraldeep.ru/api/public/tier-limits?ref=W9VMAZP).
 
 ## Effort и thinking
 
@@ -27,22 +27,22 @@
 
 `enable_thinking: false` на основном имени Qwen не отключает размышление. `thinking_token_budget` на Qwen не поддерживается ни сверху, ни в `chat_template_kwargs`. `reasoning_content` передаётся отдельно от финального текста.
 
-Есть противоречие: [раздел chat](https://neuraldeep.ru/docs/chat.md) разрешает `medium`/`xhigh` для Qwen 3.8, но код публичной [страницы модели](https://neuraldeep.ru/models/qwen3.8-27b) в полученном бандле `https://neuraldeep.ru/assets/ModelDetail-Du0Evjwd.js` говорит о принудительном понижении любого значения до `low`. Успешный HTTP-запрос не доказывает фактическое применение effort. Эту неопределённость следует показывать пользователю.
+Есть противоречие: [раздел chat](https://neuraldeep.ru/docs/chat.md?ref=W9VMAZP) разрешает `medium`/`xhigh` для Qwen 3.8, но код публичной [страницы модели](https://neuraldeep.ru/models/qwen3.8-27b?ref=W9VMAZP) в полученном бандле `https://neuraldeep.ru/assets/ModelDetail-Du0Evjwd.js` говорит о принудительном понижении любого значения до `low`. Успешный HTTP-запрос не доказывает фактическое применение effort. Эту неопределённость следует показывать пользователю.
 
 `preserve_thinking` в прочитанной полной документации отсутствует. Нельзя автоматически приписывать поддержку всем моделям. Дополнительные параметры требуют модельного профиля с источником и проверкой; reasoning предыдущих ходов необходимо сохранять при протокольном преобразовании, если этого требует конкретная модель.
 
 ## Ограничения, существенные для Claude Code
 
-Публичный каталог [моделей](https://neuraldeep.ru/models) (бандл `https://neuraldeep.ru/assets/index-Bsi3Trad.js`, срез выше) заявляет:
+Публичный каталог [моделей](https://neuraldeep.ru/models?ref=W9VMAZP) (бандл `https://neuraldeep.ru/assets/index-Bsi3Trad.js`, срез выше) заявляет:
 
 - Claude Sonnet/Opus/Haiku 5.5: клиентские function tools и reasoning, но создание prompt-cache и встроенные серверные инструменты не поддерживаются.
 - Claude Haiku 5.5: номинал 1M, но промпты примерно от 90k отклоняются; автоматическое сжатие должно учитывать практический предел.
 - `deepseek-v4-flash-b24` и `gemma-b24`: доступны в будни 18:00–07:00 МСК, в выходные круглосуточно.
 - `qwen3.8-flash-next-ru`: пометка coming soon в публичном описании; присутствие в каталоге не доказывает готовность.
 
-[Vision](https://neuraldeep.ru/docs/vision.md) указывает предел одна картинка на запрос. Это следует отдельно проверить для конкретных multimodal маршрутов: общая галочка vision не даёт точного количества изображений.
+[Vision](https://neuraldeep.ru/docs/vision.md?ref=W9VMAZP) указывает предел одна картинка на запрос. Это следует отдельно проверить для конкретных multimodal маршрутов: общая галочка vision не даёт точного количества изображений.
 
-SSE работает через `data: {...}` с завершающим `[DONE]`, включая tool calls. Адаптер должен обрабатывать фрагменты аргументов нескольких tool calls, не терять id, ошибки, usage и reasoning. Источник: [streaming](https://neuraldeep.ru/docs/streaming.md).
+SSE работает через `data: {...}` с завершающим `[DONE]`, включая tool calls. Адаптер должен обрабатывать фрагменты аргументов нескольких tool calls, не терять id, ошибки, usage и reasoning. Источник: [streaming](https://neuraldeep.ru/docs/streaming.md?ref=W9VMAZP).
 
 ## Параллельность и ошибки
 

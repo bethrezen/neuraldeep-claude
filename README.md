@@ -1,6 +1,6 @@
 # NeuralDeep для Claude Code
 
-**Локальный шлюз**, который подключает все модели и сервисы [NeuralDeep](https://neuraldeep.ru) к **Claude Code** (CLI) и **Claude Desktop**.
+**Локальный шлюз**, который подключает все модели и сервисы [NeuralDeep](https://hub.neuraldeep.ru/?ref=W9VMAZP) к **Claude Code** (CLI) и **Claude Desktop**.
 
 ![NeuralDeep × Claude Code](promo/promo.mp4)
 
@@ -28,7 +28,7 @@ node --version
 
 ### Шаг 2. Получите ключи NeuralDeep
 
-Регистрация на [neuraldeep.ru](https://neuraldeep.ru). Ключи найдутся в личном кабинете:
+Регистрация на [neuraldeep.ru](https://hub.neuraldeep.ru/?ref=W9VMAZP). Ключи найдутся в личном кабинете:
 
 - **API Key (Subscription)** — для моделей по подписке
 - **Wallet Key** — для моделей с оплатой за токены
@@ -36,7 +36,7 @@ node --version
 ### Шаг 3. Скопируйте проект
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/neuraldeep-claude.git
+git clone https://github.com/bethrezen/neuraldeep-claude.git
 cd neuraldeep-claude
 ```
 
@@ -131,14 +131,14 @@ python3 scripts/nd.py services smoke --groups all --execute
 ## Архитектура
 
 ```
-┌──────────────┐         ┌──────────────────┐         ┌─────────────────┐
-│  Claude Code │ ◄──────►│  Local Gateway   │────────►│  NeuralDeep API │
-│  / Desktop   │  OpenAI  │  127.0.0.1:8787  │  Direct │  api.neuraldeep.ru│
-└──────────────┘ Protocol │                  │         └─────────────────┘
+┌──────────────┐           ┌──────────────────┐         ┌───────────────────┐
+│  Claude Code │ ◄────────►│  Local Gateway   │────────►│  NeuralDeep API   │
+│  / Desktop   │  OpenAI   │  127.0.0.1:8787  │  Direct │  api.neuraldeep.ru│
+└──────────────┘ Protocol  │                  │         └───────────────────┘
                            │  MCP Services    │────────►
-                           │  (search,images, │         ┌─────────────────┐
-                           │   music,...)     │────────►│  Other Neura…    │
-                           └──────────────────┘         └─────────────────┘
+                           │  (search,images, │         ┌───────────────────┐
+                           │   music,...)     │────────►│  Other NeuralDeep │
+                           └──────────────────┘         └───────────────────┘
 ```
 
 Шлюз переводит запросы Claude в формат NeuralDeep, маршрутизирует по моделям и биллингу, управляет effort/thinking, генерирует короткие заголовки сессий — всё локально, без сторонних зависимостей.

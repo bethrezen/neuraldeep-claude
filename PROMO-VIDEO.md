@@ -63,7 +63,7 @@
 1. **Нейтральные библиотеки**: YouTube Audio Library, Free Music Archive, Incompetech
 2. **Стиль**: lo-fi beats (60-80 BPM), ambient pads, subtle synth textures
 3. **Темп**: медленно-средний — соответствует серьёзному инструменту разработки, не должен быть агрессивным
-4. Для синтеза музыки можно использовать [NeuralDeep Music](https://neuraldeep.ru) через Lyria 3 Pro с промптом типа "calm ambient electronic background music, no vocals, lo-fi aesthetic, 70 bpm"
+4. Для синтеза музыки можно использовать [NeuralDeep Music](https://hub.neuraldeep.ru/?ref=W9VMAZP) через Lyria 3 Pro с промптом типа "calm ambient electronic background music, no vocals, lo-fi aesthetic, 70 bpm"
 
 ## Техническая реализация видео
 

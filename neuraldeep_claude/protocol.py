@@ -235,6 +235,99 @@ def _ordinary_content(blocks: list, model: dict):
     return parts
 
 
+# NeuralDeep rejects a chat request outright once one attachment type exceeds the
+# lane's per-request allowance: HTTP 400 "Слишком много вложений одного типа для
+# этой модели". Claude Code replays every screenshot it ever read, so one screenful
+# of them used to break every later turn of the session. 2026-11-04 measurements
+# against /v1/chat/completions: qwen3.8-flash-next-ru, qwen3.8-27b, qwen3.6-35b-a3b,
+# qwen3.6-fp8 and gpt-oss-120b accept 4 images and reject 5, counting the whole
+# request (user messages and tool results together, any MIME, duplicates included);
+# gemma-4-31b and kimi-k2.6 accepted 8. A lane may therefore state its own budget
+# through catalog metadata; the measured conservative default keeps sessions usable.
+DEFAULT_MAX_IMAGE_ATTACHMENTS = 4
+ATTACHMENT_LIMIT_NOTE = ("[Images omitted: this model's provider attachment limit is {limit} image "
+                         "attachments per request, so the {count} oldest screenshot(s) are not replayed.]")
+
+
+def _attachment_budget(model: dict):
+    limit = model.get("max_image_attachments", DEFAULT_MAX_IMAGE_ATTACHMENTS)
+    if limit is None:
+        return None
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit <= 0:
+        raise ValueError("max_image_attachments must be a positive integer or null")
+    return limit
+
+
+def count_image_attachments(request: dict) -> int:
+    """Count image parts a translated request would actually send upstream."""
+    total = 0
+    for message in request.get("messages", []):
+        content = message.get("content")
+        if isinstance(content, list):
+            total += sum(1 for part in content
+                         if isinstance(part, dict) and part.get("type") == "image_url")
+    return total
+
+
+def count_anthropic_image_blocks(body: dict) -> int:
+    """Count incoming Messages image blocks, including nested tool results.
+
+    Only message content is traversed; a tool_use input that happens to carry
+    {"type": "image"} is user data, not an attachment.
+    """
+    def walk(value):
+        if isinstance(value, dict):
+            if value.get("type") == "image":
+                return 1
+            if value.get("type") in ("tool_use", "server_tool_use"):
+                return 0
+            return sum(walk(item) for item in value.values() if isinstance(item, (dict, list)))
+        if isinstance(value, list):
+            return sum(walk(item) for item in value)
+        return 0
+    return sum(walk(message.get("content")) for message in body.get("messages", [])
+               if isinstance(message, dict))
+
+
+def _simplify_text_parts(parts: list):
+    """Fold adjacent placeholder texts and return plain content when no media remains."""
+    folded = []
+    for part in parts:
+        if part["type"] == "text" and folded and folded[-1]["type"] == "text" \
+                and folded[-1]["text"] == part["text"]:
+            continue
+        folded.append(part)
+    if all(part["type"] == "text" for part in folded):
+        return "\n".join(part["text"] for part in folded)
+    return folded
+
+
+def _apply_attachment_budget(messages: list, model: dict) -> int:
+    """Keep the newest images the lane accepts and say what was dropped.
+
+    Returns how many image parts were replaced by a text note.
+    """
+    limit = _attachment_budget(model)
+    if limit is None:
+        return 0
+    positions = [(message_index, part_index)
+                 for message_index, message in enumerate(messages)
+                 if isinstance(message.get("content"), list)
+                 for part_index, part in enumerate(message["content"])
+                 if isinstance(part, dict) and part.get("type") == "image_url"]
+    excess = len(positions) - limit
+    if excess <= 0:
+        return 0
+    note = ATTACHMENT_LIMIT_NOTE.format(limit=limit, count=excess)
+    touched = set()
+    for message_index, part_index in positions[:excess]:
+        messages[message_index]["content"][part_index] = {"type": "text", "text": note}
+        touched.add(message_index)
+    for message_index in touched:
+        messages[message_index]["content"] = _simplify_text_parts(messages[message_index]["content"])
+    return excess
+
+
 def to_openai(body: dict, model: dict, actual_id: str) -> dict:
     """Translate one Messages request; reject unsupported server features explicitly."""
     request = {"model": actual_id, "messages": []}
@@ -399,6 +492,7 @@ def to_openai(body: dict, model: dict, actual_id: str) -> dict:
         # no unsupported native server edit is sent upstream.
     if body.get("container") or body.get("mcp_servers"):
         raise ValueError("Native Anthropic hosted containers/MCP require a client-side equivalent")
+    _apply_attachment_budget(messages, model)
     return request
 
 

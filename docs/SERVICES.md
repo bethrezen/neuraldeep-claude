@@ -154,12 +154,12 @@ Smoke выполняет одну базовую операцию каждой �
 скачивание; корректность изображения/музыки оценивайте отдельно.
 
 Официальные источники:
-[полная справка](https://neuraldeep.ru/llms-full.txt),
-[поиск](https://neuraldeep.ru/docs/search.md),
-[OCR](https://neuraldeep.ru/docs/ocr.md),
-[изображения](https://neuraldeep.ru/docs/images.md),
-[музыка](https://neuraldeep.ru/docs/music.md),
-[SpeechCore](https://neuraldeep.ru/docs/speechcore.md),
-[TTS](https://neuraldeep.ru/docs/tts.md),
-[Drift](https://neuraldeep.ru/docs/drift-api.md),
-[книга](https://neuraldeep.ru/docs/book-api.md).
+[полная справка](https://neuraldeep.ru/llms-full.txt?ref=W9VMAZP),
+[поиск](https://neuraldeep.ru/docs/search.md?ref=W9VMAZP),
+[OCR](https://neuraldeep.ru/docs/ocr.md?ref=W9VMAZP),
+[изображения](https://neuraldeep.ru/docs/images.md?ref=W9VMAZP),
+[музыка](https://neuraldeep.ru/docs/music.md?ref=W9VMAZP),
+[SpeechCore](https://neuraldeep.ru/docs/speechcore.md?ref=W9VMAZP),
+[TTS](https://neuraldeep.ru/docs/tts.md?ref=W9VMAZP),
+[Drift](https://neuraldeep.ru/docs/drift-api.md?ref=W9VMAZP),
+[книга](https://neuraldeep.ru/docs/book-api.md?ref=W9VMAZP).
