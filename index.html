@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralDeep × Claude Code — Промо</title>
+    <meta name="description" content="Локальный шлюз: все модели и сервисы NeuralDeep в Claude Code. Без прокси, без зависимостей, Python 3.10+.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="NeuralDeep × Claude Code">
+    <meta property="og:description" content="Все модели и сервисы NeuralDeep в Claude Code. Установка за три команды.">
+    <meta property="og:image" content="banner.png">
+    <meta property="og:url" content="https://bethrezen.github.io/neuraldeep-claude/">
+    <meta name="twitter:card" content="summary_large_image">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --border: rgba(99, 102, 241, 0.15);
+            --text: #e2e8f0;
+            --text-dim: #94a3b8;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --neuraldeep-blue: #0ea5e9;
+            --neuraldeep-cyan: #06b6d4;
+            --neuraldeep-purple: #8b5cf6;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* ── Background Grid + Particles ── */
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0;
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridShift 20s linear infinite;
+        }
+        @keyframes gridShift { to { transform: translate(-60px, -60px); } }
+
+        .bg-glow {
+            position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.15;
+            pointer-events: none; z-index: 0;
+        }
+        .bg-glow--a { width: 600px; height: 600px; top: -200px; left: -100px; background: var(--accent); animation: floatA 25s ease-in-out infinite; }
+        .bg-glow--b { width: 500px; height: 500px; bottom: -150px; right: -100px; background: var(--neuraldeep-cyan); animation: floatB 30s ease-in-out infinite; }
+        .bg-glow--c { width: 400px; height: 400px; top: 50%; left: 50%; transform: translate(-50%,-50%); background: var(--neuraldeep-purple); animation: floatC 20s ease-in-out infinite; }
+
+        @keyframes floatA { 0%,100%{transform:translate(0,0)} 50%{transform:translate(80px,60px)} }
+        @keyframes floatB { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-60px,-80px)} }
+        @keyframes floatC { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-40%,-60%) scale(1.2)} }
+
+        /* ── Audio Toggle ── */
+        .audio-toggle {
+            position: fixed; top: 20px; right: 20px; z-index: 100;
+            background: rgba(99,102,241,0.1); border: 1px solid var(--border);
+            color: var(--text); padding: 10px 16px; border-radius: 20px;
+            cursor: pointer; font-size: 14px; font-family: inherit;
+            backdrop-filter: blur(10px); transition: all 0.3s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .audio-toggle:hover { background: rgba(99,102,241,0.2); }
+        .audio-bars { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
+        .audio-bar {
+            width: 3px; background: var(--accent); border-radius: 2px;
+            animation: barPulse 0.8s ease-in-out infinite alternate;
+        }
+        .audio-bar:nth-child(1) { height: 6px; animation-delay: 0s; }
+        .audio-bar:nth-child(2) { height: 12px; animation-delay: 0.2s; }
+        .audio-bar:nth-child(3) { height: 8px; animation-delay: 0.4s; }
+        .audio-bar:nth-child(4) { height: 14px; animation-delay: 0.1s; }
+        .audio-muted .audio-bar { animation-play-state: paused; opacity: 0.3; }
+
+        @keyframes barPulse { from { transform: scaleY(0.4); } to { transform: scaleY(1); } }
+
+        /* ── Navigation ── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(10,10,15,0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-logo {
+            display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px;
+        }
+        .nav-logo-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--neuraldeep-cyan));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 900;
+        }
+        .nav-links { display: flex; gap: 24px; list-style: none; }
+        .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--text); }
+
+        /* ── Main Container ── */
+        .container {
+            max-width: 1200px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 1;
+        }
+
+        /* ── Hero Section ── */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            text-align: center; padding-top: 80px;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
+            background: rgba(99,102,241,0.1); border: 1px solid var(--border);
+            color: var(--accent); margin-bottom: 24px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        .hero-badge-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: #22c55e;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .hero h1 {
+            font-size: clamp(40px, 7vw, 72px); font-weight: 900; line-height: 1.1;
+            margin-bottom: 20px; letter-spacing: -2px;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, var(--accent), var(--neuraldeep-cyan), var(--neuraldeep-purple));
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientMove 5s ease-in-out infinite;
+        }
+        @keyframes gradientMove { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+        .hero-sub {
+            font-size: clamp(16px, 2.5vw, 22px); color: var(--text-dim);
+            max-width: 700px; margin: 0 auto 40px; line-height: 1.6;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero-actions {
+            display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 600;
+            text-decoration: none; transition: all 0.3s; cursor: pointer;
+            border: none; font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #7c3aed);
+            color: white; box-shadow: 0 4px 20px var(--accent-glow);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+        .btn-secondary {
+            background: var(--surface); color: var(--text); border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { border-color: var(--accent); background: rgba(99,102,241,0.05); }
+
+        .hero-code {
+            margin-top: 48px; display: inline-block;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        .code-block {
+            background: rgba(18,18,26,0.9); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 24px; font-family: 'JetBrains Mono', monospace;
+            font-size: 14px; text-align: left; display: flex; align-items: center; gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .code-prompt { color: #22c55e; user-select: none; }
+        .code-text { color: var(--text); }
+        .code-cursor {
+            width: 2px; height: 18px; background: var(--accent);
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .scroll-hint {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            color: var(--text-dim); font-size: 13px;
+            animation: fadeInUp 0.8s ease-out 0.5s both;
+        }
+        .scroll-mouse {
+            width: 24px; height: 36px; border: 2px solid var(--text-dim);
+            border-radius: 12px; position: relative;
+        }
+        .scroll-wheel {
+            width: 4px; height: 8px; background: var(--accent); border-radius: 2px;
+            position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+            animation: scrollWheel 2s ease-in-out infinite;
+        }
+        @keyframes scrollWheel { 0%,100%{top:6px;opacity:1} 50%{top:18px;opacity:0.3} }
+
+        /* ── Sections ── */
+        section { padding: 100px 0; }
+
+        .section-label {
+            font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+            color: var(--accent); margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: clamp(28px, 4vw, 44px); font-weight: 800;
+            margin-bottom: 16px; letter-spacing: -1px;
+        }
+        .section-desc {
+            font-size: 18px; color: var(--text-dim); max-width: 600px; margin-bottom: 48px;
+        }
+
+        /* ── Features Grid ── */
+        .features-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .feature-card {
+            background: rgba(18,18,26,0.6); border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px; backdrop-filter: blur(10px);
+            transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .feature-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .feature-card:hover { border-color: rgba(99,102,241,0.3); transform: translateY(-4px); }
+        .feature-card:hover::before { opacity: 1; }
+
+        .feature-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center;
+            font-size: 22px; margin-bottom: 16px;
+        }
+        .feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+        .feature-card p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+
+        /* ── Architecture Diagram ── */
+        .arch-section { background: rgba(18,18,26,0.4); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+        .arch-diagram {
+            display: flex; align-items: center; justify-content: center; gap: 24px;
+            flex-wrap: wrap; padding: 40px 0;
+        }
+        .arch-node {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px 28px; text-align: center;
+            min-width: 160px; transition: all 0.3s;
+        }
+        .arch-node:hover { border-color: var(--accent); transform: scale(1.05); }
+        .arch-node__icon { font-size: 28px; margin-bottom: 8px; }
+        .arch-node__label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .arch-node__desc { font-size: 12px; color: var(--text-dim); }
+        .arch-arrow {
+            font-size: 24px; color: var(--accent);
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .arch-arrow span { font-size: 11px; color: var(--text-dim); }
+
+        /* ── Models Carousel ── */
+        .models-scroll {
+            display: flex; gap: 16px; overflow-x: auto; padding: 20px 0;
+            scrollbar-width: none; scroll-behavior: smooth;
+        }
+        .models-scroll::-webkit-scrollbar { display: none; }
+
+        .model-chip {
+            flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 24px; display: flex; flex-direction: column;
+            gap: 6px; min-width: 200px; transition: all 0.3s;
+        }
+        .model-chip:hover { border-color: var(--accent); }
+        .model-chip-name { font-size: 15px; font-weight: 700; }
+        .model-chip-billing { font-size: 12px; color: var(--text-dim); }
+        .billing-pill {
+            display: inline-block; padding: 2px 8px; border-radius: 6px;
+            font-size: 11px; font-weight: 600;
+        }
+        .billing-sub { background: rgba(34,197,94,0.1); color: #22c55e; }
+        .billing-wallet { background: rgba(251,191,36,0.1); color: #fbbf24; }
+
+        /* ── Services ── */
+        .services-list {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .service-tag {
+            background: rgba(18,18,26,0.6); border: 1px solid var(--border);
+            border-radius: 10px; padding: 14px 18px; display: flex; align-items: center;
+            gap: 10px; font-size: 14px; font-weight: 500; transition: all 0.3s;
+        }
+        .service-tag:hover { border-color: var(--accent); background: rgba(99,102,241,0.05); }
+        .service-tag-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+
+        /* ── Stats ── */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 24px; margin-top: 48px;
+        }
+        .stat {
+            text-align: center; padding: 24px;
+            background: rgba(18,18,26,0.4); border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .stat-value {
+            font-size: 36px; font-weight: 900;
+            background: linear-gradient(135deg, var(--accent), var(--neuraldeep-cyan));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .stat-label { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+        /* ── CTA ── */
+        .cta-section { text-align: center; }
+        .cta-box {
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(6,182,212,0.1));
+            border: 1px solid var(--border); border-radius: 24px;
+            padding: 64px 48px; position: relative; overflow: hidden;
+        }
+        .cta-box::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--neuraldeep-cyan), var(--neuraldeep-purple));
+        }
+        .cta-box h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; margin-bottom: 16px; }
+        .cta-box p { font-size: 18px; color: var(--text-dim); margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+        /* ── Footer ── */
+        footer {
+            padding: 40px 0; text-align: center;
+            border-top: 1px solid var(--border); color: var(--text-dim); font-size: 14px;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        /* ── Animations ── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .reveal {
+            opacity: 0; transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            nav { padding: 12px 16px; }
+            .nav-links { display: none; }
+            .container { padding: 0 16px; }
+            section { padding: 60px 0; }
+            .arch-diagram { flex-direction: column; }
+            .arch-arrow { transform: rotate(90deg); }
+            .cta-box { padding: 40px 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow--a"></div>
+<div class="bg-glow bg-glow--b"></div>
+<div class="bg-glow bg-glow--c"></div>
+
+<button class="audio-toggle" id="audioToggle" title="Включить музыку">
+    <span class="audio-bars audio-muted" id="audioBars">
+        <span class="audio-bar"></span><span class="audio-bar"></span>
+        <span class="audio-bar"></span><span class="audio-bar"></span>
+    </span>
+    <span id="audioLabel">♪ Музыка</span>
+</button>
+
+<nav>
+    <div class="nav-logo">
+        <div class="nav-logo-icon">N</div>
+        <span>NeuralDeep <span style="color:var(--text-dim); font-weight:400;">× Claude Code</span></span>
+    </div>
+    <ul class="nav-links">
+        <li><a href="#video">Видео</a></li>
+        <li><a href="#features">Возможности</a></li>
+        <li><a href="#architecture">Архитектура</a></li>
+        <li><a href="#models">Модели</a></li>
+        <li><a href="#services">Сервисы</a></li>
+        <li><a href="#install">Установка</a></li>
+    </ul>
+</nav>
+
+<!-- ════════ HERO ════════ -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Открытый локальный шлюз · Без зависимостей · Python 3.10+
+        </div>
+        <h1>Все модели NeuralDeep<br>в <span class="gradient">Claude Code</span></h1>
+        <p class="hero-sub">
+            Локальный шлюз, подключает российский AI к популярному CLI-инструменту.
+            Qwen, GPT-OSS, DeepSeek, Kimi, Claude — все в одном интерфейсе.
+        </p>
+        <div class="hero-actions">
+            <a href="#install" class="btn btn-primary">⚡ Установить</a>
+            <a href="#features" class="btn btn-secondary">Узнать больше ↓</a>
+        </div>
+        <div class="hero-code">
+            <div class="code-block">
+                <span class="code-prompt">$</span>
+                <span class="code-text" id="typedText"></span>
+                <span class="code-cursor"></span>
+            </div>
+        </div>
+    </div>
+    <div class="scroll-hint">
+        <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+        Листайте вниз
+    </div>
+</section>
+
+<!-- ════════ VIDEO ════════ -->
+<section id="video">
+    <div class="container">
+        <div class="reveal">
+            <div class="section-label">Промо</div>
+            <h2 class="section-title">36 секунд о проекте</h2>
+            <p class="section-desc">
+                Проблема, архитектура, каталог моделей, сервисы и установка — коротко и по делу.
+            </p>
+        </div>
+        <div class="reveal" style="max-width:960px;margin:0 auto;">
+            <video controls preload="metadata" playsinline poster="preview.png"
+                   style="width:100%;border-radius:16px;border:1px solid var(--border);background:#000;display:block;">
+                <source src="promo.mp4" type="video/mp4">
+                Ваш браузер не поддерживает видео —
+                <a href="promo.mp4" style="color:var(--neuraldeep-cyan);">скачать promo.mp4</a>.
+            </video>
+            <p style="text-align:center;margin-top:14px;color:var(--text-dim);font-size:13px;">
+                36 с · 1920×1080 · 30 fps · музыка сгенерирована Lyria 3 Pro
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ FEATURES ════════ -->
+<section id="features">
+    <div class="container">
+        <div class="reveal">
+            <div class="section-label">Возможности</div>
+            <h2 class="section-title">Почему NeuralDeep?</h2>
+            <p class="section-desc">
+                Полный доступ к российским AI-моделям и сервисам, без прокси, без сторонних зависимостей.
+            </p>
+        </div>
+        <div class="features-grid reveal">
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Все модели в одном месте</h3>
+                <p>Qwen 3.8, GPT-OSS, DeepSeek V4, GLM 5.3, Kimi K3, Claude 5.5 — выбирайте из каталога прямо в интерфейсе.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Две системы оплаты</h3>
+                <p>Подписка с фиксированной ценой или кошелёк с оплатой за токены. Переключайтесь между моделями.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔧</div>
+                <h3>Модульные сервисы</h3>
+                <p>Поиск, OCR, генерация изображений, музыка, TTS, транскрипция, эмбеддинги. Включайте что нужно.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3>Без прокси</h3>
+                <p>Прямое HTTPS-подключение к API NeuralDeep. Прокси окружения отключены на уровне транспорта.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📦</div>
+                <h3>Переносимость</h3>
+                <p>Linux, Windows, macOS. Python 3.10+ и Node.js 18+. Никаких глобальных зависимостей.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>Безопасность</h3>
+                <p>Ключи только в .env, redaction в логах, локальный адрес 127.0.0.1, случайный токен шлюза.</p>
+            </div>
+        </div>
+        <div class="stats-row reveal">
+            <div class="stat">
+                <div class="stat-value">15+</div>
+                <div class="stat-label">Сервисов NeuralDeep</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">10+</div>
+                <div class="stat-label">Моделей доступно</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Зависимостей Python</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Платформы</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ ARCHITECTURE ════════ -->
+<section id="architecture" class="arch-section">
+    <div class="container">
+        <div class="reveal">
+            <div class="section-label">Архитектура</div>
+            <h2 class="section-title">Как это работает</h2>
+            <p class="section-desc">
+                Шлюз перенаправляет запросы Claude в NeuralDeep напрямую, переводя форматы и маршрутизируя по моделям.
+            </p>
+        </div>
+        <div class="arch-diagram reveal">
+            <div class="arch-node">
+                <div class="arch-node__icon">💻</div>
+                <div class="arch-node__label">Claude CLI / Desktop</div>
+                <div class="arch-node__desc">OpenAI-compatible API</div>
+            </div>
+            <div class="arch-arrow">→ <span>JSON</span></div>
+            <div class="arch-node" style="border-color: var(--accent);">
+                <div class="arch-node__icon">⚙️</div>
+                <div class="arch-node__label">Local Gateway</div>
+                <div class="arch-node__desc">:8787 · Format translation · Routing</div>
+            </div>
+            <div class="arch-arrow">→ <span>Direct HTTPS</span></div>
+            <div class="arch-node">
+                <div class="arch-node__icon">☁️</div>
+                <div class="arch-node__label">NeuralDeep API</div>
+                <div class="arch-node__desc">Models & Services</div>
+            </div>
+        </div>
+        <div class="arch-diagram reveal" style="margin-top: 24px;">
+            <div class="arch-node" style="border-color: var(--neuraldeep-cyan);">
+                <div class="arch-node__icon">🔍</div>
+                <div class="arch-node__label">Search</div>
+            </div>
+            <div class="arch-node" style="border-color: var(--neuraldeep-cyan);">
+                <div class="arch-node__icon">🖼️</div>
+                <div class="arch-node__label">Images</div>
+            </div>
+            <div class="arch-node" style="border-color: var(--neuraldeep-cyan);">
+                <div class="arch-node__icon">🎵</div>
+                <div class="arch-node__label">Music</div>
+            </div>
+            <div class="arch-node" style="border-color: var(--neuraldeep-cyan);">
+                <div class="arch-node__icon">🎙️</div>
+                <div class="arch-node__label">TTS / Speech</div>
+            </div>
+            <div class="arch-node" style="border-color: var(--neuraldeep-cyan);">
+                <div class="arch-node__icon">📄</div>
+                <div class="arch-node__label">OCR</div>
+            </div>
+            <div class="arch-node" style="border-color: var(--neuraldeep-cyan);">
+                <div class="arch-node__icon">🧠</div>
+                <div class="arch-node__label">Drift Agent</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ MODELS ════════ -->
+<section id="models">
+    <div class="container">
+        <div class="reveal">
+            <div class="section-label">Модели</div>
+            <h2 class="section-title">Доступные модели</h2>
+            <p class="section-desc">
+                Каталог обновляется автоматически. Подписка или кошелёк — выбирайте сами.
+            </p>
+        </div>
+        <div class="models-scroll reveal">
+            <div class="model-chip">
+                <div class="model-chip-name">Qwen 3.8 27B</div>
+                <div class="model-chip-billing"><span class="billing-pill billing-sub">ПОДПИСКА</span> Основной выбор</div>
+            </div>
+            <div class="model-chip">
+                <div class="model-chip-name">GPT-OSS 120B</div>
+                <div class="model-chip-billing"><span class="billing-pill billing-sub">ПОДПИСКА</span> <span class="billing-pill billing-wallet">₽ КОШЕЛЁК</span></div>
+            </div>
+            <div class="model-chip">
+                <div class="model-chip-name">DeepSeek V4</div>
+                <div class="model-chip-billing"><span class="billing-pill billing-wallet">₽ КОШЕЛЁК</span></div>
+            </div>
+            <div class="model-chip">
+                <div class="model-chip-name">GLM 5.3</div>
+                <div class="model-chip-billing"><span class="billing-pill billing-wallet">₽ КОШЕЛЁК</span></div>
+            </div>
+            <div class="model-chip">
+                <div class="model-chip-name">Kimi K3</div>
+                <div class="model-chip-billing"><span class="billing-pill billing-wallet">₽ КОШЕЛЁК</span></div>
+            </div>
+            <div class="model-chip">
+                <div class="model-chip-name">Claude 5.5</div>
+                <div class="model-chip-billing"><span class="billing-pill billing-sub">NEURALDEEP</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ SERVICES ════════ -->
+<section id="services" class="arch-section">
+    <div class="container">
+        <div class="reveal">
+            <div class="section-label">Сервисы</div>
+            <h2 class="section-title">Модульные инструменты</h2>
+            <p class="section-desc">
+                Каждый сервис — отдельный MCP процесс. Включайте нужное, отключайте лишнее.
+            </p>
+        </div>
+        <div class="services-list reveal">
+            <div class="service-tag"><span class="service-tag-dot"></span>Web Search</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Read URL</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Crawl Site</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Telegram Search</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>OCR PDF/IMG</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Generate Images</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Edit Images</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Upscale</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Music Generate</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>TTS Voice</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Transcription</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Diarization</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Embeddings</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Rerank</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>PII Anonymize</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Decisions</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Drift Agent</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>SpeechCore</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Book Library</div>
+            <div class="service-tag"><span class="service-tag-dot"></span>Browser MCP</div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ INSTALL CTA ════════ -->
+<section id="install" class="cta-section">
+    <div class="container">
+        <div class="cta-box reveal">
+            <h2>Готовы начать?</h2>
+            <p>Три команды — и все модели NeuralDeep доступны в Claude Code. Без зависимостей, без прокси.</p>
+            <div class="hero-code" style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:32px;">
+                <div class="code-block" style="font-size:13px;">
+                    <span class="code-prompt">$</span>
+                    <span class="code-text">git clone https://github.com/bethrezen/neuraldeep-claude.git</span>
+                </div>
+                <div class="code-block" style="font-size:13px;">
+                    <span class="code-prompt">$</span>
+                    <span class="code-text">cp .env.example .env  # ← вставьте ключи</span>
+                </div>
+                <div class="code-block" style="font-size:13px;">
+                    <span class="code-prompt">$</span>
+                    <span class="code-text">./install.sh --activate</span>
+                </div>
+            </div>
+            <a href="https://github.com/bethrezen/neuraldeep-claude" class="btn btn-secondary" target="_blank">⭐ Репозиторий на GitHub</a>
+            <a href="https://github.com/bethrezen/neuraldeep-claude/blob/main/ARCHITECTURE.md" class="btn btn-secondary" target="_blank">📖 Почитать архитектуру</a>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        NeuralDeep для Claude Code · Переносимый локальный шлюз ·
+        <a href="https://hub.neuraldeep.ru/?ref=W9VMAZP" target="_blank">neuraldeep.ru</a> ·
+        <a href="https://github.com/bethrezen/neuraldeep-claude" target="_blank">GitHub</a> ·
+        <a href="https://github.com/bethrezen/neuraldeep-claude/blob/main/ARCHITECTURE.md" target="_blank">Документация</a>
+    </div>
+</footer>
+
+<!-- ════════ SCRIPTS ════════ -->
+<script>
+// ── Typed Text Animation ──
+const phrases = [
+    'claude "Напиши мне код на Python"',
+    './update-models.sh',
+    'python scripts/nd.py services enable all',
+    'claude /model      # ← выбор моделей',
+];
+let phraseIdx = 0, charIdx = 0;
+const el = document.getElementById('typedText');
+function type() {
+    if (charIdx < phrases[phraseIdx].length) {
+        el.textContent += phrases[phraseIdx][charIdx];
+        charIdx++;
+        setTimeout(type, 50 + Math.random() * 40);
+    } else {
+        setTimeout(() => {
+            el.textContent = '';
+            charIdx = 0;
+            phraseIdx = (phraseIdx + 1) % phrases.length;
+            type();
+        }, 2000);
+    }
+}
+type();
+
+// ── Scroll Reveal ──
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── Smooth Scroll ──
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+        const t = document.querySelector(a.getAttribute('href'));
+        if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
+    });
+});
+
+// ── Audio Player (bgmusic.mp3 generated via Lyria 3 Pro) ──
+const audioBtn = document.getElementById('audioToggle');
+const audioBarsEl = document.getElementById('audioBars');
+const audioLabel = document.getElementById('audioLabel');
+let audioPlayer;
+
+audioBtn.addEventListener('click', () => {
+    if (!audioPlayer) {
+        audioPlayer = new Audio('bgmusic.mp3');
+        audioPlayer.loop = true;
+        audioPlayer.volume = 0.5;
+        audioPlayer.play();
+        audioBarsEl.classList.remove('audio-muted');
+        audioLabel.textContent = '♪ Пауза';
+    } else if (audioPlayer.paused) {
+        audioPlayer.play();
+        audioBarsEl.classList.remove('audio-muted');
+        audioLabel.textContent = '♪ Пауза';
+    } else {
+        audioPlayer.pause();
+        audioBarsEl.classList.add('audio-muted');
+        audioLabel.textContent = '♪ Музыка';
+    }
+});
+</script>
+</body>
+</html>
