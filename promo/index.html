@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeuralDeep × Claude Code — Промо</title>
+    <meta name="description" content="Локальный шлюз: все модели и сервисы NeuralDeep в Claude Code. Без прокси, без зависимостей, Python 3.10+.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="NeuralDeep × Claude Code">
+    <meta property="og:description" content="Все модели и сервисы NeuralDeep в Claude Code. Установка за три команды.">
+    <meta property="og:image" content="banner.png">
+    <meta property="og:url" content="https://bethrezen.github.io/neuraldeep-claude/">
+    <meta name="twitter:card" content="summary_large_image">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -375,6 +382,7 @@
         <span>NeuralDeep <span style="color:var(--text-dim); font-weight:400;">× Claude Code</span></span>
     </div>
     <ul class="nav-links">
+        <li><a href="#video">Видео</a></li>
         <li><a href="#features">Возможности</a></li>
         <li><a href="#architecture">Архитектура</a></li>
         <li><a href="#models">Модели</a></li>
@@ -410,6 +418,30 @@
     <div class="scroll-hint">
         <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
         Листайте вниз
+    </div>
+</section>
+
+<!-- ════════ VIDEO ════════ -->
+<section id="video">
+    <div class="container">
+        <div class="reveal">
+            <div class="section-label">Промо</div>
+            <h2 class="section-title">36 секунд о проекте</h2>
+            <p class="section-desc">
+                Проблема, архитектура, каталог моделей, сервисы и установка — коротко и по делу.
+            </p>
+        </div>
+        <div class="reveal" style="max-width:960px;margin:0 auto;">
+            <video controls preload="metadata" playsinline poster="preview.png"
+                   style="width:100%;border-radius:16px;border:1px solid var(--border);background:#000;display:block;">
+                <source src="promo.mp4" type="video/mp4">
+                Ваш браузер не поддерживает видео —
+                <a href="promo.mp4" style="color:var(--neuraldeep-cyan);">скачать promo.mp4</a>.
+            </video>
+            <p style="text-align:center;margin-top:14px;color:var(--text-dim);font-size:13px;">
+                36 с · 1920×1080 · 30 fps · музыка сгенерирована Lyria 3 Pro
+            </p>
+        </div>
     </div>
 </section>
 
@@ -617,7 +649,7 @@
             <div class="hero-code" style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:32px;">
                 <div class="code-block" style="font-size:13px;">
                     <span class="code-prompt">$</span>
-                    <span class="code-text">git clone https://github.com/YOUR_USERNAME/neuraldeep-claude.git</span>
+                    <span class="code-text">git clone https://github.com/bethrezen/neuraldeep-claude.git</span>
                 </div>
                 <div class="code-block" style="font-size:13px;">
                     <span class="code-prompt">$</span>
@@ -628,7 +660,8 @@
                     <span class="code-text">./install.sh --activate</span>
                 </div>
             </div>
-            <a href="ARCHITECTURE.md" class="btn btn-secondary">📖 Почитать архитектуру</a>
+            <a href="https://github.com/bethrezen/neuraldeep-claude" class="btn btn-secondary" target="_blank">⭐ Репозиторий на GitHub</a>
+            <a href="https://github.com/bethrezen/neuraldeep-claude/blob/main/ARCHITECTURE.md" class="btn btn-secondary" target="_blank">📖 Почитать архитектуру</a>
         </div>
     </div>
 </section>
@@ -637,7 +670,8 @@
     <div class="container">
         NeuralDeep для Claude Code · Переносимый локальный шлюз ·
         <a href="https://hub.neuraldeep.ru/?ref=W9VMAZP" target="_blank">neuraldeep.ru</a> ·
-        <a href="ARCHITECTURE.md">Документация</a>
+        <a href="https://github.com/bethrezen/neuraldeep-claude" target="_blank">GitHub</a> ·
+        <a href="https://github.com/bethrezen/neuraldeep-claude/blob/main/ARCHITECTURE.md" target="_blank">Документация</a>
     </div>
 </footer>
 
@@ -648,7 +682,7 @@ const phrases = [
     'claude "Напиши мне код на Python"',
     './update-models.sh',
     'python scripts/nd.py services enable all',
-    'claude /model      # ← пикер моделей',
+    'claude /model      # ← выбор моделей',
 ];
 let phraseIdx = 0, charIdx = 0;
 const el = document.getElementById('typedText');

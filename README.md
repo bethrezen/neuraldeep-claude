@@ -2,7 +2,10 @@
 
 **Локальный шлюз**, который подключает все модели и сервисы [NeuralDeep](https://hub.neuraldeep.ru/?ref=W9VMAZP) к **Claude Code** (CLI) и **Claude Desktop**.
 
-![NeuralDeep × Claude Code](promo/promo.mp4)
+[![Промо-видео NeuralDeep × Claude Code](promo/preview.png)](promo/promo.mp4)
+
+> ▶️ [Смотреть промо-видео (36 с, 1920×1080)](promo/promo.mp4) ·
+> [промо-сайт](https://bethrezen.github.io/neuraldeep-claude/)
 
 ## Что это даёт
 
