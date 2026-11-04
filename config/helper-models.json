@@ -1,6 +1,6 @@
 {
   "schema": 1,
   "_help": "Explicit subscription helpers, independent of the main coding model and effort. auto_permission_classifier preserves native Auto checks; null restores native classifier selection. desktop_title_model applies only to exact known native Desktop direct title request templates; null preserves native title routing. Use exact base nd/...@subscription routes. No wallet fallback or rewriting ordinary Code requests.",
-  "auto_permission_classifier": "nd/qwen3.6-35b-a3b-noreason@subscription",
-  "desktop_title_model": "nd/qwen3.6-35b-a3b-noreason@subscription"
+  "auto_permission_classifier": "nd/qwen3.6-fp8-noreason@subscription",
+  "desktop_title_model": "nd/qwen3.6-fp8-noreason@subscription"
 }
