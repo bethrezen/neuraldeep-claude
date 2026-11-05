@@ -354,6 +354,31 @@
       },
       "preserve_reasoning": true
     },
+    "qwen3.8-flash-next-ru": {
+      "efforts": [
+        "low",
+        "medium",
+        "xhigh"
+      ],
+      "default_effort": "xhigh",
+      "effort_status": "family-documented-live-accepted",
+      "provenance": [
+        "https://docs.qwencloud.com/api-reference/chat/openai-chat",
+        "https://docs.qwencloud.com/developer-guides/getting-started/latest-model",
+        "https://neuraldeep.ru/docs/chat.md?ref=W9VMAZP"
+      ],
+      "effort_parameter": "reasoning_effort",
+      "effort_aliases": {
+        "minimal": "low",
+        "high": "xhigh",
+        "max": "xhigh"
+      },
+      "thinking_options": [
+        "enabled"
+      ],
+      "preserve_reasoning": true,
+      "notes": "Same Qwen3.8 Flash family scale adopted for the NeuralDeep RU lane after live acceptance probes (2026-11-03 exploratory-controls and 2026-11-05 effort-validation receipts under .local/effort-validation/): the lane answers HTTP 200 for low/medium/xhigh. Provider-side application remains unproven; the lane also accepted deliberately invalid values, and reasoning-token spread did not separate levels — including a documented qwen3.8-27b positive control, so the metric itself is not sensitive. reasoning_off_efforts deliberately omitted: NeuralDeep documents that enable_thinking=false on a base Qwen name is stripped and thinking continues; only -noreason models disable it. Parameters intentionally omitted so refresh() keeps the working chat_template_kwargs shape rather than the unverified top-level family shape."
+    },
     "qwen3.7-plus": {
       "efforts": [],
       "default_effort": null,

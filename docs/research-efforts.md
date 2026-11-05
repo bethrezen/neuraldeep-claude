@@ -18,6 +18,7 @@
 | Kimi K2.6 | Дискретные уровни не документированы | enabled | thinking.type enabled/disabled |
 | Kimi K2.7 Code | Дискретные уровни не документированы | enabled | Thinking выключить нельзя |
 | Qwen 3.8 Flash | low, medium, xhigh | xhigh | enable_thinking и preserve_thinking |
+| Qwen 3.8 Flash Next RU | low, medium, xhigh (семейный профиль, 5 нояб.) | xhigh | Живое принятие доказано; применение внутри бэкенда — нет |
 | Qwen 3.7 Plus / Flash | Дискретные уровни не установлены | thinking enabled | ON/OFF, числовой thinking_budget, preserve_thinking |
 | MiniMax M2.5 | Не регулируется | Всегда thinking | Сохранять полное содержимое `<think>` и tool_calls |
 
